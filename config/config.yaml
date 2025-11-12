@@ -1,0 +1,14 @@
+# Mistral uniquement pour POC
+llm:
+  model: "gpt-4o-mini"
+  temperature: 0.5
+  max_tokens: 1000
+
+# Mémoire
+memory:
+  window_size: 10
+  summary_frequency: 10
+
+# Évaluation
+evaluation:
+  frequency: 20
