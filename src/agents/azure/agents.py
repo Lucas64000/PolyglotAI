@@ -45,14 +45,13 @@ class ConversationalAgent(BaseAgent):
         
         try:
             response = self.llm.generate(messages, system_prompt)
-            logger.info(f"Le LLM a bien généré la réponse pour {user.name}")
             return response
         except Exception as e:
             logger.error(f"Une erreur est survenue pendant la génération de la réponse pour {user.name}: {e}")
             return "Veuillez réessayer."
     
     def _build_prompt(self, user: User) -> str:
-        return CONVERSATIONAL_PROMPT.format(name=user.name, level=user.current_level)
+        return CONVERSATIONAL_PROMPT.format(user=user)
 
     def _format_history_for_llm(self, conversation_history: List[Message]) -> List[Dict[str, str]]:
         return [
@@ -75,15 +74,14 @@ class GrammarAgent(BaseAgent):
         system_prompt = self._build_prompt(user)
         
         try:
-            response = self.llm.generate([message], system_prompt)
-            logger.info(f"Le LLM a bien généré la réponse pour {user.name}")
+            response = self.llm.generate([message], system_prompt, temperature=0.0)
             return response
         except Exception as e:
             logger.error(f"Une erreur est survenue pendant la génération de la réponse pour {user.name}: {e}")
             return "Veuillez réessayer."
     
     def _build_prompt(self, user: User) -> str:
-        return GRAMMAR_PROMPT.format(name=user.name)
+        return GRAMMAR_PROMPT.format(user=user)
     
 
 class RouterAgent(BaseAgent):
@@ -102,28 +100,74 @@ class RouterAgent(BaseAgent):
 
     def run(self, message: Dict[str, str], user: User, conversation_history: List[Message]) -> str:
         prompt = self._build_prompt(user)
-        response = self.llm.generate_tool_call(messages=[message], tools=self._get_schema_tools(user), system_prompt=prompt)
+        tool_calls = self.llm.generate_tool_call(messages=[message], tools=self._get_schema_tools(user), system_prompt=prompt, temperature=0.0)
         
-        res = ""
-        for tool in response:
-            if tool.type == "function":
-                function_name = tool.function.name
-                args = json.loads(tool.function.arguments)
-                
-                call_func = self.tool_mapping.get(function_name)
+        if not tool_calls:
+            logger.info("Le router n'a pas choisi de tools.")
+            return "Veuillez réessayer"
 
-                if call_func is None:
-                    logger.warning(f"Le tool {function_name} n'existe pas. Utilisation de l'agent conversationnel par défaut.")
-                    call_func = self.tool_mapping["call_conversational_agent"]
-                
-                message_for_agent: Dict[str, str] = {"role": "user", "content": args["user_message"]}
-                # Pas d'utilisation de la mémoire pour l'instant
-                res = call_func(message=message_for_agent, user=user, conversation_history=[])
+        tool_responses: List[Any] = [] 
 
-        return res
+        for tool_call in tool_calls:
+            function_name = tool_call.function.name
+            
+            try:
+                args_data = json.loads(tool_call.function.arguments)
+                
+                content = self._extract_content_for_agent(function_name, args_data)
+
+                agent_run_method = self.tool_mapping.get(function_name)
+                
+                if agent_run_method and content is not None:
+                    message_for_agent = {"role": "user", "content": content}
+                    logger.info(f"Tool utilisé: {function_name} avec comme message: {content}")
+                    
+                    agent_result = agent_run_method(message_for_agent, user, [])
+                    
+                    tool_responses.append({
+                        "agent": function_name,
+                        "result": agent_result
+                    })
+                else:
+                    logger.error(f"L'execution du tool {function_name} a échoué: Agent non trouvé ou contenu manquant.")
+                    
+            except json.JSONDecodeError as e:
+                logger.error(f"Erreur lors du chargement des arguments au format JSON {function_name}: {e}")
+            except Exception as e:
+                logger.error(f"Erreur durant l'execution de l'agent pour la fonction {function_name}: {e}")
+
+        return self._format_final_response(tool_responses)
+
+
+    def _extract_content_for_agent(self, function_name: str, args_data: Dict[str, Any]) -> str | None:
+        """Extrait le contenu du message pour l'agent cible."""
+        
+        if function_name == "call_grammar_agent":
+            return args_data.get('text_to_analyze')
+        elif function_name == "call_conversational_agent":
+            return args_data.get('user_message')
+        
+        return None
+
+    def _format_final_response(self, results: List[Dict[str, Any]]) -> str:
+        """Fusionne les résultats de tous les agents pour l'utilisateur."""
+        
+        if not results:
+            return "Aucun agent n'a pu répondre suite à l'exécution des outils."
+            
+        if len(results) == 1:
+            return results[0]['result']
+            
+        final_text = "Voici ma réponse complète :\n\n"
+        for item in results:
+            agent_name = item['agent'].replace('call_', '').replace('_agent', '').capitalize()
+            final_text += f"--- {agent_name} Response ---\n"
+            final_text += item['result'] + "\n\n"
+            
+        return final_text.strip()
 
     def _build_prompt(self, user: User) -> str:
-        return ROUTER_PROMPT.format(name=user.name, tools=self._get_schema_tools(user))
+        return ROUTER_PROMPT.format(user=user, tools=self._get_schema_tools(user))
 
     def _get_schema_tools(self, user: User) -> List[Dict[str, Any]]:
         return [
@@ -132,20 +176,24 @@ class RouterAgent(BaseAgent):
                 "function": {          
                     "name": "call_grammar_agent",
                     "description": (
-                        "Utilise cet outil UNIQUEMENT pour les demandes explicites de correction grammaticale, conjugaison, ou vérification de syntaxe."
+                        "Utilise cet outil UNIQUEMENT pour les demandes explicites de correction grammaticale, conjugaison, ou vérification de syntaxe. "
+                        "**La demande de correction DOIT prévaloir sur toute intention conversationnelle.** "
+                        "Ne jamais l'utiliser pour répondre à une question ouverte."
                     ),
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "user_message": {
+                            "text_to_analyze": {
                                 "type": "string",
                                 "description": (
-                                    "Le message exact de l'utilisateur à corriger."
+                                "**EXTRAIS la ou les phrases à corriger.** Si l'utilisateur demande une correction, tu dois uniquement extraire le texte à corriger, pas la requête en elle même. Par exemple, si le message est 'I go cinema. Corrige si j'ai fait des fautes', tu extrais 'I go cinema'."
+                                "Fais bien attention au contexte de la requête, l'utilisateur peut très bien demander de corriger en {user.native_language.value}, alors qu'il parle des fautes en {user.target_language.value}. "
+                                "Dans ce là, tu dois porter ton attention sur le message {user.target_language.value} et pas sur le message {user.native_language.value}."
                                 )
                             }
                         },
                     },
-                    "required": ["user_message"],
+                    "required": ["text_to_analyze"],
                 } ,
             },
             {
@@ -153,7 +201,7 @@ class RouterAgent(BaseAgent):
                 "function": {
                     "name": "call_conversational_agent",
                     "description": (
-                        "Utilise cet outil pour des conversations basiques avec l'utilisateur, sans demande de correction ou autre."
+                        "Utilise cet outil pour TOUTES les conversations générales, déclarations, salutations, questions ouvertes, ou comme agent par DÉFAUT lorsque l'intention n'est pas une demande explicite de correction."
                     ),
                     "parameters": {
                         "type": "object",
@@ -179,32 +227,29 @@ def main():
 
     user = sample_user_french_to_english
     conversation_history = sample_conversation_history
-    
-    message_str = "I go cinema yesterday"
+        
+    message_str = "Hello teacher, today we're starting a new lesson. I want to practice my english to become fluent. " \
+    "What would you recommand me to practice first? Corrige les fautes s'il y en a."
+    # Fautes attendues: recommand me to practice
     message1 = {"role": "user", "content": message_str}
     print(message_str)
+    print()
 
     response1 = agent.run(message1, user, conversation_history)
-    print(f"Agent response:\n{response1}")
+    print(response1)
     print()
-        
-    # message_str = "Hello teacher, today we're starting a new lesson. I want to practice my english to become fluent. " \
-    # "What would you recommand me to practice first? Je veux aussi que tu me dises si j'ai fait des fautes dans les phrases."
-    # message2 = {"role": "user", "content": message_str}
-    # print(message_str)
 
-    # response2 = agent.run(message2, user, conversation_history)
-    # print("Agent response \n")
-    # print(response2)
+    print("="*60)
+    print()
 
+    message_str = "I go cinema yesterday."
+    message2 = {"role": "user", "content": message_str}
+    print(message_str)
+    print()
 
-    # message_str = "I go cinema yesterday."
-    # message3 = {"role": "user", "content": message_str}
-    # print(message_str)
-
-    # response3 = agent.run(message3, user, conversation_history)
-    # print("Agent response \n")
-    # print(response3)
+    response2 = agent.run(message2, user, conversation_history)
+    print(response2)
+    print()
 
 if __name__ == "__main__":
     main()
