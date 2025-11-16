@@ -6,17 +6,17 @@ Données d'exemple prêtes à l'emploi pour les tests et démos
 from typing import List
 from uuid import uuid4
 
-from src.core.enums import (
+from src.agents.core.enums import (
     CECRLevel,
     Language,
     Role,
 )
-from src.models.model import (
-    User,
+from src.models.conversation_model import (
     Conversation,
     Message,
     Correction,
 )
+from src.models.user_model import User
 
 
 # ============================================================================
