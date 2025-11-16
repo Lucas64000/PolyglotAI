@@ -1,14 +1,19 @@
-# Mistral uniquement pour POC
+general:
+  active_llm_provider: azure
+
+providers:
+  azure:
+    deployment_name_router: gpt-4o-mini
+    deployment_name_default: gpt-4o
+    api_version: "2025-01-01-preview"
+  
+  # A tester plus tard
+  mistral:
+    deployment_name_router: xx
+    deployment_name_default: xx
+    api_version: xx
+
 llm:
-  model: "gpt-4o-mini"
-  temperature: 0.5
-  max_tokens: 1000
-
-# Mémoire
-memory:
-  window_size: 10
-  summary_frequency: 10
-
-# Évaluation
-evaluation:
-  frequency: 20
+  temperature_default: 0.7
+  max_tokens_default: 1000
+  context_history_length_default: 5
