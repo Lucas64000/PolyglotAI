@@ -1,72 +1,32 @@
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List
-import json
-
-from src.models.model import User, Message
-from src.core.enums import Role
-from src.services.llm.azure_llm_services import AzureFoundryLLM
-
-from src.utils.logger import get_logger
-from src.utils.prompts import CONVERSATIONAL_PROMPT, GRAMMAR_PROMPT, ROUTER_PROMPT
-from src.utils.fixtures import sample_user_french_to_english, sample_conversation_history
-
-logger = get_logger(__name__)
-
-class BaseAgent(ABC):
-    """Classe abstraite des agents"""
-    def __init__(self, llm: AzureFoundryLLM):
-        self.llm = llm
-
-    @abstractmethod
-    def run(self, message: Dict[str, str], user: User, conversation_history: List[Message]) -> Any:
-        """
-        Fonction principale executant le rôle de l'agent
-        Args: 
-            - message: Message de l'utilisateur
-            - user: Informations de l'utilisateur
-            - conversation_history: Historique de la conversation
-        """
-        pass
-
-    @abstractmethod
-    def _build_prompt(self, user: User) -> str:
-        pass
-
 class ConversationalAgent(BaseAgent):
-    """(Temporaire) Agent par défaut qui discute avec l'utilisateur de n'importe quel topic sans demande spécifique"""
-    def __init__(self, llm: AzureFoundryLLM):
-        super().__init__(llm=llm)
+    """Agent par défaut qui discute avec l'utilisateur de n'importe quel topic sans demande spécifique"""
+    def __init__(self, llm: ProviderLLM, memory: MemoryService):
+        super().__init__(llm=llm, memory=memory)
         
-    def run(self, message: Dict[str, str], user: User, conversation_history: List[Message]) -> Any:
+    def run(self, message: Message, user: User) -> Any:
         system_prompt = self._build_prompt(user)
-        messages = self._format_history_for_llm(conversation_history)
+        historic_messages = self.memory.historic
         
+        messages = [system_prompt]
+        messages.extend(historic_messages)
         messages.append(message)
         
         try:
-            response = self.llm.generate(messages, system_prompt)
+            response = self.llm.generate(messages)
             return response
         except Exception as e:
             logger.error(f"Une erreur est survenue pendant la génération de la réponse pour {user.name}: {e}")
             return "Veuillez réessayer."
     
-    def _build_prompt(self, user: User) -> str:
-        return CONVERSATIONAL_PROMPT.format(user=user)
-
-    def _format_history_for_llm(self, conversation_history: List[Message]) -> List[Dict[str, str]]:
-        return [
-            {"role": message.role.value, "content": message.content} 
-            for message in conversation_history
-            if message.role != Role.SYSTEM
-        ]
-
+    def _build_prompt(self, user: User) -> Message:
+        return {"role": "system", "content": CONVERSATIONAL_PROMPT.format(user=user)}
 
 class GrammarAgent(BaseAgent):
     """
     Cet agent permet de corriger les erreurs de grammaire faites par l'utilisateur. 
     Utilisé lorsque l'utilisateur demande explicitement des corrections, ou lors du recap de la conversation.
     """
-    def __init__(self, llm: AzureFoundryLLM):
+    def __init__(self, llm: ProviderLLM):
         super().__init__(llm=llm)
 
         
@@ -84,23 +44,115 @@ class GrammarAgent(BaseAgent):
         return GRAMMAR_PROMPT.format(user=user)
     
 
+class MemoryAgent:
+    """Gère l'accès et la mise à jour de la mémoire de l'utilisateur stocké dans un JSON (temporaire)."""
+
+    PERSISTENCE_FILE = "src/services/db/memory_store.json"
+
+    def __init__(self):
+        self.memory_store = self._load_store()
+
+    def _load_store(self) -> Dict[str, Any]:
+        """Charge le store depuis le fichier JSON s'il existe."""
+        if os.path.exists(self.PERSISTENCE_FILE):
+            try:
+                with open(self.PERSISTENCE_FILE, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                print(f"Erreur lors du chargement de la mémoire ({e}). Initialisation à vide.")
+                return {}
+        return {}
+
+    def save_store(self):
+        """Sauvegarde le store actuel dans le fichier JSON."""
+        with open(self.PERSISTENCE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(self.memory_store, f, indent=2, ensure_ascii=False)
+
+    def _get_user_data(self, user_id: str) -> Dict[str, Any]:
+        """Récupère ou initialise les données de l'utilisateur."""
+        if user_id not in self.memory_store:
+            self.memory_store[user_id] = {
+                "context_history": [],
+                "learning_profile": {"target_language_errors": [], "goals": []}
+            }
+        return self.memory_store[user_id]
+
+    def get_context_history(self, user_id: str, n: int = 5) -> List[Dict[str, str]]:
+        """Retourne les N derniers échanges pour le contexte du LLM."""
+        data = self._get_user_data(user_id)
+        return data["context_history"][-n:]
+
+    def update_history(self, user_id: str, role: str, content: str):
+        """Ajoute un message à l'historique de la conversation."""
+        data = self._get_user_data(user_id)
+        data["context_history"].append({"role": role, "content": content})
+        
+        # On conserve uniquement les 10 derniers messages pour des raisons d'optimisation
+        if len(data["context_history"]) > 10:
+             data["context_history"].pop(0) 
+
+    def register_error(self, user_id: str, original: str, correction: str, error_type: str):
+        """Ajoute ou met à jour un type d'erreur dans le profil d'apprentissage."""
+        data = self._get_user_data(user_id)
+        
+        found = False
+        for error in data["learning_profile"]["target_language_errors"]:
+            if error["original"] == original and error["correction"] == correction:
+                error["count"] += 1
+                error["last_seen"] = utc_now()
+                found = True
+                break
+                
+        if not found:
+            data["learning_profile"]["target_language_errors"].append({
+                "type": error_type,
+                "original": original,
+                "correction": correction,
+                "count": 1,
+                "last_seen": utc_now()
+            })
+            
+    def get_top_errors(self, user_id: str, n: int = 3) -> List[Dict[str, Any]]:
+        """Récupère les N erreurs les plus fréquentes de l'utilisateur."""
+        data = self._get_user_data(user_id)
+        errors = data["learning_profile"]["target_language_errors"]
+        
+        return sorted(errors, key=lambda x: x['count'], reverse=True)[:n]
+
+    def get_conversation_context(self, user_id: str, n: int = 5) -> List[Dict[str, str]]:
+        """Retourne l'historique formaté POUR le LLM (déjà au bon format)"""
+        data = self._get_user_data(user_id)
+        # Déjà au format {"role": "user", "content": "..."}
+        return data["context_history"][-n:]
+    
+    def add_interaction(self, user_id: str, user_message: str, assistant_response: str):
+        """Ajoute une interaction complète (user + assistant)"""
+        self.update_history(user_id, "user", user_message)
+        self.update_history(user_id, "assistant", assistant_response)
+    
+    def get_learning_context(self, user_id: str) -> str:
+        """Retourne un résumé du profil d'apprentissage pour enrichir le prompt"""
+        top_errors = self.get_top_errors(user_id, n=3)
+        
+        if not top_errors:
+            return "Aucune erreur récurrente détectée pour l'instant."
+        
+        context = "Erreurs fréquentes de l'utilisateur :\n"
+        for err in top_errors:
+            context += f"- {err['type']}: '{err['original']}' → '{err['correction']}' (x{err['count']})\n"
+        
+        return context
+    
 class RouterAgent(BaseAgent):
     """Agent orchestrateur, appelle les différents agents en leur passant les outils nécessaires selon les requêtes de l'utilisateur"""
-    def __init__(self, llm: AzureFoundryLLM):
-        super().__init__(llm)
-        
-        self.conversational = ConversationalAgent(self.llm)
-        self.grammar = GrammarAgent(self.llm)
-        
-        self.tool_mapping = {
-            "call_conversational_agent": self.conversational.run,
-            "call_grammar_agent": self.grammar.run,
-        }
+    def __init__(self, llm: ProviderLLM, memory: MemoryService, agents: Dict[str, BaseAgent]):
+        super().__init__(llm, memory)
+        self.agents = agents
 
 
-    def run(self, message: Dict[str, str], user: User, conversation_history: List[Message]) -> str:
+    def run(self, message: Message, user: User) -> str:
         prompt = self._build_prompt(user)
-        tool_calls = self.llm.generate_tool_call(messages=[message], tools=self._get_schema_tools(user), system_prompt=prompt, temperature=0.0)
+        tool_calls = self.llm.generate_tool_calls(messages=[message], tools=self._get_schema_tools(user))
         
         if not tool_calls:
             logger.info("Le router n'a pas choisi de tools.")
@@ -116,13 +168,13 @@ class RouterAgent(BaseAgent):
                 
                 content = self._extract_content_for_agent(function_name, args_data)
 
-                agent_run_method = self.tool_mapping.get(function_name)
+                agent = self.agents.get(function_name)
                 
-                if agent_run_method and content is not None:
+                if agent and content is not None:
                     message_for_agent = {"role": "user", "content": content}
                     logger.info(f"Tool utilisé: {function_name} avec comme message: {content}")
                     
-                    agent_result = agent_run_method(message_for_agent, user, [])
+                    agent_result = agent.run(message_for_agent, user)
                     
                     tool_responses.append({
                         "agent": function_name,
@@ -166,10 +218,10 @@ class RouterAgent(BaseAgent):
             
         return final_text.strip()
 
-    def _build_prompt(self, user: User) -> str:
-        return ROUTER_PROMPT.format(user=user, tools=self._get_schema_tools(user))
+    def _build_prompt(self, user: User) -> Message:
+        return {"role": "system", "content": ROUTER_PROMPT.format(user=user, tools=self._get_schema_tools(user))}
 
-    def _get_schema_tools(self, user: User) -> List[Dict[str, Any]]:
+    def _get_schema_tools(self, user: User) -> List[ChatCompletionToolParam]:
         return [
             {
                 "type": "function",  
@@ -216,40 +268,3 @@ class RouterAgent(BaseAgent):
                 }
             }
         ]
-
-
-def main():
-    """Test des agents avec des fixtures"""
-    print("Test de l'orchestration ...")
-
-    llm = AzureFoundryLLM()
-    agent = RouterAgent(llm)
-
-    user = sample_user_french_to_english
-    conversation_history = sample_conversation_history
-        
-    message_str = "Hello teacher, today we're starting a new lesson. I want to practice my english to become fluent. " \
-    "What would you recommand me to practice first? Corrige les fautes s'il y en a."
-    # Fautes attendues: recommand me to practice
-    message1 = {"role": "user", "content": message_str}
-    print(message_str)
-    print()
-
-    response1 = agent.run(message1, user, conversation_history)
-    print(response1)
-    print()
-
-    print("="*60)
-    print()
-
-    message_str = "I go cinema yesterday."
-    message2 = {"role": "user", "content": message_str}
-    print(message_str)
-    print()
-
-    response2 = agent.run(message2, user, conversation_history)
-    print(response2)
-    print()
-
-if __name__ == "__main__":
-    main()
