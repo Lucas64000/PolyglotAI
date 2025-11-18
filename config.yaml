@@ -1,0 +1,20 @@
+general:
+  service_llm_default: azure
+
+services:
+  azure:
+    model_name_default: gpt-4o-mini
+    api_version: 2025-01-01-preview
+    extra: 
+      timeout: 60.0
+      max_retries: 3
+    
+  # A tester plus tard
+  mistral:
+    model_name_default: xx
+    extra: {}  
+
+llm:
+  temperature_default: 0.7
+  max_tokens_default: 1000
+  context_history_length_default: 5
