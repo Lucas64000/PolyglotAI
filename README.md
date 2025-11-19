@@ -65,6 +65,7 @@ Créer un tuteur de langues virtuel capable de :
 ### Structure du Projet
 ```
 src/
+├── agents/                # Développement en cours (cf branche MVP - Agents) 
 ├── services/              
 │   ├── llm/               # Services LLM ✅
 │   │   ├── providers/     # Providers (Azure) ✅
