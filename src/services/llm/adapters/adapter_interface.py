@@ -1,7 +1,7 @@
-
 from abc import ABC, abstractmethod
-
 from typing import List, Generic
+from uuid import UUID
+
 from src.core.types import TMessage, TResponse
 from src.models.conversation_model import Message
 
@@ -33,12 +33,13 @@ class MessageAdapter(Generic[TMessage, TResponse], ABC):
         pass
 
     @abstractmethod
-    def from_sdk_response(self, response: TResponse) -> Message:
+    def from_sdk_response(self, response: TResponse, conversation_id: UUID) -> Message:
         """
         Convertit une réponse du SDK en Message métier
 
         Args:
-            response (TResponse): Réponse brute du SDK
+            response (TResponse): Objet renvoyé par le SDK 
+            conversation_id (UUID): L'ID de la conversation associée
 
         Returns:
             Message: Message métier
