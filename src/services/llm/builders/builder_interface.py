@@ -6,7 +6,7 @@ from src.core.types import TMessage, TResponse
 
 from src.clients.config.config_interface import ClientConfig
 from src.clients.client_interface import ClientWrapper
-from src.adapters.llm_adapter.adapter_interface import MessageAdapter
+from src.services.llm.adapters.adapter_interface import MessageAdapter
 from ..providers.provider_interface import BaseLLMProvider
 
 class BaseLLMBuilder(Generic[TMessage, TResponse], ABC):

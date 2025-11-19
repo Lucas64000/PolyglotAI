@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Generic
 
 from src.models.conversation_model import Message
 from src.clients.client_interface import ClientWrapper
-from src.adapters.llm_adapter.adapter_interface import MessageAdapter
+from src.services.llm.adapters.adapter_interface import MessageAdapter
 
 from src.core.types import TMessage, TResponse
 

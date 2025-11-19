@@ -13,8 +13,8 @@ from src.clients.config.azure_config import AzureClientConfig
 from src.clients.client_interface import ClientWrapper
 from src.clients.azure_client import AzureClientWrapper
 
-from src.adapters.llm_adapter.adapter_interface import MessageAdapter
-from src.adapters.llm_adapter.openai_adapter import OpenAIMessageAdapter 
+from src.services.llm.adapters.adapter_interface import MessageAdapter
+from src.services.llm.adapters.openai_adapter import OpenAIMessageAdapter 
 
 from ..providers.provider_interface import BaseLLMProvider
 from ..providers.azure_provider import AzureLLMProvider

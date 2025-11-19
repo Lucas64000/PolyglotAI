@@ -6,7 +6,7 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 
 from .provider_interface import BaseLLMProvider
 from src.clients.client_interface import ClientWrapper
-from src.adapters.llm_adapter.adapter_interface import MessageAdapter
+from src.services.llm.adapters.adapter_interface import MessageAdapter
 
 from src.core.exceptions.llm_exceptions import LLMError, LLMJSONDecodeError, LLMResponseError
 from src.utils.logger import get_logger
