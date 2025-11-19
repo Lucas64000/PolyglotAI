@@ -40,36 +40,37 @@ class Config:
         
         self.general_config = yaml_data.get("general", {})
         self.services_config = yaml_data.get("services", {})
+        self.providers_config = self.services_config.get("providers", {})
         self.llm_config = yaml_data.get("llm", {})
 
-        self.service_default = self.general_config.get("service_llm_default", "")
-        self.model_name_default = self.get_service_config(self.service_default).get("model_name_default", "")
+        self.provider_default = self.general_config.get("provider_llm_default", "")
+        self.model_name_default = self.get_provider_config(self.provider_default).get("model_name_default", "")
         
         self.temperature_default = float(self.llm_config.get("temperature_default", 0.7))
         self.max_tokens_default = int(self.llm_config.get("max_tokens_default", 1000))
         self.context_history_length_default = int(self.llm_config.get("context_history_length_default", 5))
 
 
-    def get_service_config(self, service_name: str) -> Dict[str, Any]:
+    def get_provider_config(self, provider_name: str) -> Dict[str, Any]:
         """
-        Récupère la configuration d'un service
+        Récupère la configuration d'un provider
         
         Args:
-            service_name: Nom du service
+            provider_name: Nom du provider
             
         Returns:
-            Configuration du service
+            Configuration du provider
         """
-        return self.services_config.get(service_name, {})
+        return self.providers_config.get(provider_name, {})
 
-    def get_available_services(self) -> List[str]:
+    def get_available_providers(self) -> List[str]:
         """
-        Récupère la liste des services disponibles
+        Récupère la liste des providers disponibles
         
         Returns:
-            Liste des noms de services
+            Liste des noms de providers
         """
-        return list(self.services_config.keys())
+        return list(self.providers_config.keys())
 
     def get_env(self, key: str) -> str:
         """
