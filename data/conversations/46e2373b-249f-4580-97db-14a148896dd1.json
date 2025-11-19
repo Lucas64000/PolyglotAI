@@ -1,0 +1,104 @@
+[
+  {
+    "id": "416525fd-56fb-4536-afff-5968f5d3ff53",
+    "conversation_id": "46e2373b-249f-4580-97db-14a148896dd1",
+    "role": "user",
+    "content": "Bonjour, je m'appelle Lucas.",
+    "created_at": "2025-11-19T21:52:12.314287Z",
+    "metadata": {}
+  },
+  {
+    "id": "c3f6315d-20a1-4ea4-ab39-9f34c998c87d",
+    "conversation_id": "46e2373b-249f-4580-97db-14a148896dd1",
+    "role": "assistant",
+    "content": "Bonjour Lucas ! Comment puis-je t'aider aujourd'hui ?",
+    "created_at": "2025-11-19T21:52:13.848790Z",
+    "metadata": {
+      "api_response_id": "chatcmpl-CdkNxYOLUnEWyWzRmIBCpzWT0YlTn",
+      "api_created_at": "2025-11-19T21:52:13+00:00",
+      "usage": {
+        "completion_tokens": 12,
+        "prompt_tokens": 14,
+        "total_tokens": 26,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0,
+          "rejected_prediction_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cached_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "id": "e0bdd636-0c07-403c-9895-e835ac191590",
+    "conversation_id": "46e2373b-249f-4580-97db-14a148896dd1",
+    "role": "user",
+    "content": "Comment tu va aujourd'hui ?",
+    "created_at": "2025-11-19T21:52:13.850334Z",
+    "metadata": {}
+  },
+  {
+    "id": "e836eba9-6267-465a-97f6-e27b241f29a2",
+    "conversation_id": "46e2373b-249f-4580-97db-14a148896dd1",
+    "role": "assistant",
+    "content": "Je vais bien, merci ! Et toi, comment ça va ?",
+    "created_at": "2025-11-19T21:52:15.182480Z",
+    "metadata": {
+      "api_response_id": "chatcmpl-CdkNygfYE3VELa3WUGVvkgWbeFMRN",
+      "api_created_at": "2025-11-19T21:52:14+00:00",
+      "usage": {
+        "completion_tokens": 14,
+        "prompt_tokens": 39,
+        "total_tokens": 53,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0,
+          "rejected_prediction_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cached_tokens": 0
+        }
+      }
+    }
+  },
+  {
+    "id": "5e9dac28-aad7-4782-acef-84512e746872",
+    "conversation_id": "46e2373b-249f-4580-97db-14a148896dd1",
+    "role": "user",
+    "content": "Tu peux me rappeler mon prénom ? Et j'aimerais que tu me dises si j'ai fait une faute dans la phrase d'avant. Idem avec le message précédent",
+    "created_at": "2025-11-19T21:52:15.184144Z",
+    "metadata": {}
+  },
+  {
+    "id": "1949fb99-3d74-4340-8d21-54f6f0d355ea",
+    "conversation_id": "46e2373b-249f-4580-97db-14a148896dd1",
+    "role": "assistant",
+    "content": "Bien sûr, ton prénom est Lucas. Concernant tes phrases :\n\n1. Dans \"Comment tu va aujourd'hui ?\", il y a une petite faute. La forme correcte est \"Comment tu vas aujourd'hui ?\" car \"vas\" est la bonne conjugaison du verbe \"aller\" à la 2e personne du singulier.\n\n2. Dans \"Et j'aimerais que tu me dises si j'ai fait une faute dans la phrase d'avant\", il n'y a pas de faute. La phrase est correcte !\n\nSi tu as d'autres questions ou si tu veux discuter davantage, n'hésite pas !",
+    "created_at": "2025-11-19T21:52:18.311978Z",
+    "metadata": {
+      "api_response_id": "chatcmpl-CdkNziTZ4mcACU3o7pvLA2Mp305yS",
+      "api_created_at": "2025-11-19T21:52:15+00:00",
+      "usage": {
+        "completion_tokens": 123,
+        "prompt_tokens": 93,
+        "total_tokens": 216,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0,
+          "rejected_prediction_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cached_tokens": 0
+        }
+      }
+    }
+  }
+]
