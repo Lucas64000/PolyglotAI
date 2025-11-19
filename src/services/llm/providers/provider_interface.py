@@ -1,9 +1,6 @@
-"""
-Abstraction du service des LLMs 
-"""
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, ClassVar, Generic
+from typing import List, Dict, Any, Generic
 
 from src.models.conversation_model import Message
 from src.clients.client_interface import ClientWrapper
@@ -12,13 +9,10 @@ from src.adapters.llm_adapter.adapter_interface import MessageAdapter
 from src.core.types import TMessage, TResponse
 
 
-class BaseLLMService(Generic[TMessage, TResponse], ABC):
+class BaseLLMProvider(Generic[TMessage, TResponse], ABC):
     """
     Classe abstraite pour tous les providers LLM
     """
-
-    REQUIRED_ENV_MAP: ClassVar[Dict[str, str]] = {}
-    REQUIRED_YAML_MAP: ClassVar[Dict[str, str]] = {}
 
     def __init__(
             self, 

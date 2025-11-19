@@ -143,11 +143,17 @@ from src.utils.config import get_config
 config = get_config()
 
 # Créer le service
+config = get_config()
+service_name = config.service_default
+model_name = config.model_name_default
+temperature = config.temperature_default
+max_tokens = config.max_tokens_default
+    
 service = LLMFacade.create_llm_service(
-    service_name=config.active_llm_service,
-    model_name="gpt-4o",
-    temperature=0.7,
-    max_tokens=1000
+    service_name=service_name,
+    model_name=model_name,
+    temperature=temperature,
+    max_tokens=max_tokens
 )
 
 # Générer une réponse

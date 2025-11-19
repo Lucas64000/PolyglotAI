@@ -4,7 +4,7 @@ import json
 from src.models.conversation_model import Message
 from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 
-from .service_interface import BaseLLMService
+from .provider_interface import BaseLLMProvider
 from src.clients.client_interface import ClientWrapper
 from src.adapters.llm_adapter.adapter_interface import MessageAdapter
 
@@ -13,9 +13,9 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-class AzureLLMService(BaseLLMService[ChatCompletionMessageParam, ChatCompletion]):
+class AzureLLMProvider(BaseLLMProvider[ChatCompletionMessageParam, ChatCompletion]):
     """
-    Implémentation du service métier LLM pour Azure.
+    Implémentation du provider métier LLM pour Azure.
     Encapsule la logique de génération de texte et la conversion des messages via l'adapter OpenAIMessageAdapter
     """
 
@@ -28,7 +28,7 @@ class AzureLLMService(BaseLLMService[ChatCompletionMessageParam, ChatCompletion]
         adapter: MessageAdapter[ChatCompletionMessageParam, ChatCompletion]
     ):
         """
-        Initialise le service Azure LLM avec les composants injectés
+        Initialise le provider Azure LLM avec les composants injectés
 
         Args:
             model_name: Nom du deployment Azure
@@ -55,7 +55,7 @@ class AzureLLMService(BaseLLMService[ChatCompletionMessageParam, ChatCompletion]
             LLMResponseError: Réponse vide ou invalide du LLM
         """
         sdk_messages = self.adapter.to_sdk_format(messages)
-
+        
         try:
             response: ChatCompletion = self.client.generate(
                 messages=sdk_messages,
@@ -72,7 +72,8 @@ class AzureLLMService(BaseLLMService[ChatCompletionMessageParam, ChatCompletion]
         if not response.choices or not response.choices[0].message.content:
             raise LLMResponseError("Réponse vide du LLM")
 
-        return self.adapter.from_sdk_response(response)
+        conversation_id=messages[0].conversation_id
+        return self.adapter.from_sdk_response(response, conversation_id)
 
     def generate_json(self, messages: List[Message]) -> Dict[str, Any]:
         """

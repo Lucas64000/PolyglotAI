@@ -2,15 +2,17 @@
 Modèles liés à l'utilisateur
 """
 
-from typing import Optional
 from uuid import UUID, uuid4
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from src.agents.core.enums import (
+from src.core.enums import (
     CECRLevel,
     Language,
 ) 
+
+from src.utils.utils import utc_now
 
 class User(BaseModel):
     """
@@ -22,5 +24,7 @@ class User(BaseModel):
     native_language: Language
     target_language: Language
     
-    current_level: CECRLevel  
-    initial_level: Optional[CECRLevel] = None 
+    current_level: CECRLevel
+    initial_level: CECRLevel | None = None
+    
+    created_at: datetime = Field(default_factory=utc_now)

@@ -7,11 +7,11 @@ from src.core.types import TMessage, TResponse
 from src.clients.config.config_interface import ClientConfig
 from src.clients.client_interface import ClientWrapper
 from src.adapters.llm_adapter.adapter_interface import MessageAdapter
-from ..service_interface import BaseLLMService
+from ..providers.provider_interface import BaseLLMProvider
 
 class BaseLLMBuilder(Generic[TMessage, TResponse], ABC):
     """
-    Interface pour un constructeur de service LLM.
+    Interface pour un constructeur de provider LLM.
     """
 
     def build(
@@ -19,15 +19,15 @@ class BaseLLMBuilder(Generic[TMessage, TResponse], ABC):
         model_name: str, 
         temperature: float,
         max_tokens: int,
-    ) -> BaseLLMService[TMessage, TResponse]:
+    ) -> BaseLLMProvider[TMessage, TResponse]:
         """
-        Construit et retourne une instance complète du service LLM
-        (en assemblant ClientConfig, ClientWrapper, Adapter et Service).
+        Construit et retourne une instance complète du provider LLM
+        (en assemblant ClientConfig, ClientWrapper, Adapter et Provider).
         """
         client_config = self._build_client_config(model_name=model_name)
         client_wrapper = self._build_client(client_config=client_config)
         adapter = self._build_adapter()
-        service = self._build_service(
+        provider = self._build_provider(
             model_name=model_name,
             client_wrapper=client_wrapper,
             adapter=adapter,
@@ -35,7 +35,7 @@ class BaseLLMBuilder(Generic[TMessage, TResponse], ABC):
             max_tokens=max_tokens,
         )
 
-        return service
+        return provider
     
     @abstractmethod
     def _build_client_config(self, model_name: str) -> ClientConfig:
@@ -50,13 +50,13 @@ class BaseLLMBuilder(Generic[TMessage, TResponse], ABC):
         pass
 
     @abstractmethod
-    def _build_service(
+    def _build_provider(
         self,
         model_name: str,
         client_wrapper: ClientWrapper[TMessage, TResponse],
         adapter: MessageAdapter[TMessage, TResponse],
         temperature: float,
         max_tokens: int,
-    ) -> BaseLLMService[TMessage, TResponse]:
-        """Assemble le service final avec tous ses composants."""
+    ) -> BaseLLMProvider[TMessage, TResponse]:
+        """Assemble le provider final avec tous ses composants."""
         pass

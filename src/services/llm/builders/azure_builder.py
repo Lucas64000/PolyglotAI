@@ -5,7 +5,7 @@ from src.utils.config import get_config
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion
 
 from .builder_interface import BaseLLMBuilder
-from .builder_registry import BuilderRegistry
+from .registry_builder import BuilderRegistry
 
 from src.clients.config.config_interface import ClientConfig
 from src.clients.config.azure_config import AzureClientConfig
@@ -16,8 +16,8 @@ from src.clients.azure_client import AzureClientWrapper
 from src.adapters.llm_adapter.adapter_interface import MessageAdapter
 from src.adapters.llm_adapter.openai_adapter import OpenAIMessageAdapter 
 
-from src.services.service_interface import BaseLLMService
-from src.services.azure_service import AzureLLMService
+from ..providers.provider_interface import BaseLLMProvider
+from ..providers.azure_provider import AzureLLMProvider
 
 
 logger = get_logger(__name__)
@@ -30,7 +30,7 @@ class AzureLLMBuilder(BaseLLMBuilder[ChatCompletionMessageParam, ChatCompletion]
     Implémente les étapes de construction propres à Azure.
     """
 
-    def build(self, model_name: str, temperature: float, max_tokens: int) -> BaseLLMService[ChatCompletionMessageParam, ChatCompletion]:
+    def build(self, model_name: str, temperature: float, max_tokens: int) -> BaseLLMProvider[ChatCompletionMessageParam, ChatCompletion]:
         return super().build(model_name, temperature, max_tokens)
 
     def _build_client_config(self, model_name: str) -> AzureClientConfig:
@@ -39,14 +39,14 @@ class AzureLLMBuilder(BaseLLMBuilder[ChatCompletionMessageParam, ChatCompletion]
         """
         logger.debug(f"Construction de la config Azure pour : {model_name}")
         config = get_config()
-        service_config = config.get_service_config("azure")
-        extra = service_config.get("extra", {})
+        provider_config = config.get_provider_config("azure")
+        extra = provider_config.get("extra", {})
         try:
             return AzureClientConfig(
                 api_key=config.get_env("AZURE_OPENAI_API_KEY"),
                 azure_endpoint=config.get_env("AZURE_OPENAI_ENDPOINT"),
                 azure_deployment=model_name,
-                api_version=service_config.get("api_version", "2025-01-01-preview"),
+                api_version=provider_config.get("api_version", "2025-01-01-preview"),
                 timeout=extra.get("timeout"),
                 max_retries=extra.get("max_retries")
             )
@@ -72,19 +72,19 @@ class AzureLLMBuilder(BaseLLMBuilder[ChatCompletionMessageParam, ChatCompletion]
         logger.debug("Création de l'adaptateur OpenAI")
         return OpenAIMessageAdapter()
 
-    def _build_service(
+    def _build_provider(
         self,
         model_name: str,
         client_wrapper: ClientWrapper[ChatCompletionMessageParam, ChatCompletion],
         adapter: MessageAdapter[ChatCompletionMessageParam, ChatCompletion],
         temperature: float,
         max_tokens: int,
-    ) -> BaseLLMService[ChatCompletionMessageParam, ChatCompletion]:
+    ) -> BaseLLMProvider[ChatCompletionMessageParam, ChatCompletion]:
         """
-        Assemble le service Azure LLM final
+        Assemble le provider Azure LLM final
         """
-        logger.debug("Assemblage du service Azure LLM")
-        return AzureLLMService(
+        logger.debug("Assemblage du provider Azure LLM")
+        return AzureLLMProvider(
             model_name=model_name,
             client=client_wrapper,
             adapter=adapter,
