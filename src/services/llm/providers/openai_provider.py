@@ -5,17 +5,17 @@ from src.models.conversation_model import Message
 from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 
 from .provider_interface import BaseLLMProvider
-from src.clients.client_interface import ClientWrapper
-from src.services.llm.adapters.adapter_interface import MessageAdapter
+from ..clients.client_interface import ClientWrapper
+from ..adapters.adapter_interface import MessageAdapter
 
 from src.core.exceptions.llm_exceptions import LLMError, LLMJSONDecodeError, LLMResponseError
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-class AzureLLMProvider(BaseLLMProvider[ChatCompletionMessageParam, ChatCompletion]):
+class OpenAILLMProvider(BaseLLMProvider[ChatCompletionMessageParam, ChatCompletion]):
     """
-    Implémentation du provider métier LLM pour Azure.
+    Implémentation du provider métier LLM pour OpenAI.
     Encapsule la logique de génération de texte et la conversion des messages via l'adapter OpenAIMessageAdapter
     """
 
@@ -28,13 +28,13 @@ class AzureLLMProvider(BaseLLMProvider[ChatCompletionMessageParam, ChatCompletio
         adapter: MessageAdapter[ChatCompletionMessageParam, ChatCompletion]
     ):
         """
-        Initialise le provider Azure LLM avec les composants injectés
+        Initialise le provider OpenAI LLM avec les composants injectés
 
         Args:
-            model_name: Nom du deployment Azure
+            model_name: Nom du modèle OpenAI
             temperature: Température de génération
             max_tokens: Nombre maximum de tokens
-            client: Client wrapper Azure OpenAI déjà configuré
+            client: Client wrapper OpenAICompatible (Azure, Ollama, Grok, etc.) déjà configuré
             adapter: Adaptateur de messages OpenAI
         """
         super().__init__(model_name, temperature, max_tokens, client, adapter)
@@ -66,13 +66,14 @@ class AzureLLMProvider(BaseLLMProvider[ChatCompletionMessageParam, ChatCompletio
             logger.info(f"Appel LLM réussi pour le modèle {self.model_name}.")
 
         except Exception as e:
-            logger.error(f"Erreur Azure : {e}")
+            logger.error(f"Erreur OpenAI : {e}")
             raise LLMError(f"Échec de l'appel LLM : {e}") from e
 
         if not response.choices or not response.choices[0].message.content:
             raise LLMResponseError("Réponse vide du LLM")
 
-        conversation_id=messages[0].conversation_id
+        # messages[0] == message SYSTEM, messages[1] == message USER
+        conversation_id=messages[1].conversation_id
         return self.adapter.from_sdk_response(response, conversation_id)
 
     def generate_json(self, messages: List[Message]) -> Dict[str, Any]:
@@ -102,7 +103,7 @@ class AzureLLMProvider(BaseLLMProvider[ChatCompletionMessageParam, ChatCompletio
             logger.info(f"Appel LLM JSON réussi ({self.model_name})")
 
         except Exception as e:
-            logger.error(f"Erreur Azure : {e}")
+            logger.error(f"Erreur OpenAI : {e}")
             raise LLMError(f"Échec de l'appel LLM : {e}") from e
 
         if not response.choices or not response.choices[0].message.content:
@@ -157,5 +158,5 @@ class AzureLLMProvider(BaseLLMProvider[ChatCompletionMessageParam, ChatCompletio
 #     #         return response.choices[0].message.tool_calls
             
 #     #     except Exception as e:
-#     #         logger.error(f"Erreur lors de l'appel à Azure/generate_tool_call : {e}")
+#     #         logger.error(f"Erreur lors de l'appel à OpenAI/generate_tool_call : {e}")
 #     #         return None 

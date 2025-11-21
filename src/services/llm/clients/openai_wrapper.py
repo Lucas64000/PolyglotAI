@@ -1,16 +1,20 @@
 
+from abc import ABC, abstractmethod
+
 from typing import List
-from openai import AzureOpenAI
+from openai import OpenAI, AzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion
 from .client_interface import ClientWrapper
-from .config.azure_config import AzureClientConfig
+from .config.ollama_config import OllamaClientConfig
 
-class AzureClientWrapper(ClientWrapper[ChatCompletionMessageParam, ChatCompletion]):
-    """Wrapper pour Azure OpenAI."""
+class OpenAIClientWrapper(ClientWrapper[ChatCompletionMessageParam, ChatCompletion], ABC):
+    """Wrapper pour les clients compatibles OpenAI (Azure, OpenAI, Ollama, Grok, etc.)."""
     
-    def __init__(self, config: AzureClientConfig):
-        self.config = config
-        self.client = AzureOpenAI(**config.to_sdk_kwargs())
+    client: OpenAI | AzureOpenAI
+
+    @abstractmethod
+    def __init__(self, config: OllamaClientConfig):
+        pass
 
     def generate(
         self, 
@@ -20,7 +24,7 @@ class AzureClientWrapper(ClientWrapper[ChatCompletionMessageParam, ChatCompletio
         temperature: float
     ) -> ChatCompletion:
         return self.client.chat.completions.create(
-            model=model_name,
+            model=model_name,   
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature

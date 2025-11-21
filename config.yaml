@@ -1,8 +1,14 @@
 general:
-  provider_llm_default: azure
+  provider_llm_default: ollama
 
 services:
   providers:
+    ollama:
+      model_name_default: qwen2.5:7b
+      base_url: http://localhost:11434/v1
+      extra: 
+        timeout: 60.0
+        max_retries: 3
     azure:
       model_name_default: gpt-4o-mini
       api_version: 2025-01-01-preview
