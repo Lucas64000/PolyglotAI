@@ -41,5 +41,7 @@ class Conversation(BaseModel):
 
     title: str = "Nouvelle Conversation"
     status: ConversationStatus = ConversationStatus.ACTIVE
+
+    summary: str = ""
     
     created_at: datetime = Field(default_factory=utc_now)

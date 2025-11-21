@@ -6,6 +6,8 @@ from typing import List, Dict
 from uuid import UUID
 from pathlib import Path
 
+from src.models.user_model import User
+
 from .repository_interface import BaseMemoryRepository
 from src.models.conversation_model import Conversation, Message
 from src.utils.logger import get_logger
@@ -14,23 +16,30 @@ from src.core.enums import ConversationStatus
 logger = get_logger(__name__)
 
 class JsonFileMemoryRepository(BaseMemoryRepository):
-    """
-    Stocke chaque conversation dans un fichier JSON séparé.
-    """
-
-    def __init__(self, storage_dir: str = "data/conversations"):
-        self.storage_dir = Path(storage_dir)
+    "Stocke chaque user et conversation dans un fichier JSON séparé."
+    def __init__(self, base_dir: str = "data"):
+        self.base_dir = Path(base_dir)
+        self.conversations_dir = self.base_dir / "conversations"
+        self.users_dir = self.base_dir / "users"
+        
         self._lock = threading.RLock()
-        self._ensure_directory_exists()
+        
+        self._ensure_directory_exists(self.conversations_dir)
+        self._ensure_directory_exists(self.users_dir)
 
+        # Index en mémoire
         self._conversations_index: Dict[str, Conversation] = {} 
-        self.index_file_path = self.storage_dir / "conversations_index.json"
+        self.index_file_path = self.conversations_dir / "conversations_index.json"
 
         self._load_index()
 
-    def _ensure_directory_exists(self):
-        if not self.storage_dir.exists():
-            self.storage_dir.mkdir(parents=True, exist_ok=True)
+    def _ensure_directory_exists(self, path: Path):
+            if not path.exists():
+                path.mkdir(parents=True, exist_ok=True)
+
+    # =============================================
+    # CRUD CONVERSATIONS
+    # =============================================
 
     def _load_index(self):    
         """Charge l'index des conversations (sans les messages)"""
@@ -67,13 +76,13 @@ class JsonFileMemoryRepository(BaseMemoryRepository):
             except Exception as e:
                 logger.error(f"Erreur lors de la sauvegarde de l'index des conversations: {e}")
 
-    def _get_file_path(self, conversation_id: UUID) -> Path:
+    def _get_conversation_file_path(self, conversation_id: UUID) -> Path:
         """Retourne le chemin du fichier pour une conversation donnée."""
-        return self.storage_dir / f"{str(conversation_id)}.json"
+        return self.conversations_dir / f"{str(conversation_id)}.json"
 
     def _load_conversation(self, conversation_id: UUID) -> List[Message]:
         """Charge une conversation depuis son fichier."""
-        file_path = self._get_file_path(conversation_id)
+        file_path = self._get_conversation_file_path(conversation_id)
         
         if not file_path.exists():
             return []
@@ -88,7 +97,7 @@ class JsonFileMemoryRepository(BaseMemoryRepository):
 
     def _save_conversation(self, conversation_id: UUID, messages: List[Message]):
         """Sauvegarde une conversation dans son fichier."""
-        file_path = self._get_file_path(conversation_id)
+        file_path = self._get_conversation_file_path(conversation_id)
         
         try:
             data_to_save = [msg.model_dump(mode='json') for msg in messages]
@@ -100,24 +109,25 @@ class JsonFileMemoryRepository(BaseMemoryRepository):
             logger.error(f"Erreur écriture fichier {file_path}: {e}")
 
     def _delete_conversation_file(self, conversation_id: UUID) -> None:
-        file_path = self._get_file_path(conversation_id)
+        file_path = self._get_conversation_file_path(conversation_id)
 
         if file_path.exists():
             os.remove(file_path)
             logger.info(f"Historique des messages de la conversation {conversation_id} supprimé")
 
-    # =============================================
-    # CRUD CONVERSATIONS
-    # =============================================
-
     def create_conversation(self, user_id: UUID) -> Conversation:
+        
+        if not self._user_exists(user_id):
+            raise ValueError(f"Impossible de créer une conversation: l'utilisateur {user_id} n'existe pas")
+        
         conv = Conversation(user_id=user_id)
 
         with self._lock:
             self._conversations_index[str(conv.id)] = conv
             self._save_index()
-        
-        logger.info(f"Conversation {conv.id} créée dans l'index")
+            self._load_index()
+
+        logger.info(f"Conversation {conv.id} créée pour l'utilisateur {user_id}")
         return conv
 
     def get_all_conversations(self, user_id: UUID) -> List[Conversation]:
@@ -132,15 +142,15 @@ class JsonFileMemoryRepository(BaseMemoryRepository):
             # Tri des conversations par date pour que la plus récente soit en premier
             return sorted(filtered_conversations, key=lambda c: c.created_at, reverse=True)
 
-    def get_conversation_by_id(self, conversation_id: UUID) -> Conversation | None:
+    def get_conversation_by_id(self, conversation_id: UUID) -> Conversation:
         cid_str = str(conversation_id)
-        
-        if cid_str not in self._conversations_index:
-            logger.warning(f"Conversation {cid_str} introuvable")
-            return
-        
+
         with self._lock:
-            return self._conversations_index.get(str(conversation_id))
+            if cid_str not in self._conversations_index:
+                logger.warning(f"Conversation {cid_str} introuvable")
+                raise ValueError(f"La conversation {conversation_id} n'existe pas.")
+            
+            return self._conversations_index[cid_str]
         
     def update_conversation_metadata(self, updated_conversation: Conversation) -> None:
         cid_str = str(updated_conversation.id)
@@ -163,12 +173,13 @@ class JsonFileMemoryRepository(BaseMemoryRepository):
 
                 self._delete_conversation_file(conversation_id)
                 self._save_index()
+        logger.debug(f"Conversation {conversation_id} supprimée")
 
     # =============================================
     # CRUD MESSAGES
     # =============================================
 
-    def add_message(self, message: Message) -> None:
+    def save_message(self, message: Message) -> None:
         """
         Ajoute un message à l'historique de conversation
         """
@@ -204,3 +215,49 @@ class JsonFileMemoryRepository(BaseMemoryRepository):
             
             self._save_conversation(cid, updated_messages)
             logger.info(f"Conversation {cid} mise à jour")
+
+    # =============================================
+    # CRUD USERS
+    # =============================================
+
+
+    def _get_user_file_path(self, user_id: UUID) -> Path:
+        """Récupère le json de l'utilisateur."""
+        return self.users_dir / f"{str(user_id)}.json"
+
+    def _user_exists(self, user_id: UUID) -> bool:
+        """Vérifie si un utilisateur existe."""
+        file_path = self._get_user_file_path(user_id)
+        return file_path.exists()
+    
+    def create_user(self, user: User) -> None:
+        """Créé un utilisateur."""
+        file_path = self._get_user_file_path(user.id)
+        if file_path.exists():
+            raise ValueError(f"Impossible de créer l'utilsateur {user.name} avec l'ID {user.id} : il existe déjà.")
+        
+        with self._lock:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(user.model_dump_json(indent=2))
+                logger.debug(f"Utilisateur {user.id} sauvegardé.")
+            except Exception as e:
+                logger.error(f"Erreur sauvegarde user {user.id}: {e}")
+
+
+    def get_user(self, user_id: UUID) -> User:
+        """Récupère un utilisateur par son ID."""
+        file_path = self._get_user_file_path(user_id)
+        
+        if not file_path.exists():
+            logger.warning(f"Utilisateur {user_id} introuvable.")
+            raise ValueError(f"L'utilisateur {user_id} n'existe pas")
+        
+        with self._lock:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    return User.model_validate(data)
+            except Exception as e:
+                logger.error(f"Erreur chargement user {user_id}: {e}")
+                raise ValueError(f"Erreur lors du chargement de l'utilisateur {user_id}") from e

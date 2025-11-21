@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 
 from typing import List
 from src.models.conversation_model import Conversation, Message
+from src.models.user_model import User
 
 from uuid import UUID
 
@@ -18,7 +19,7 @@ class BaseMemoryRepository(ABC):
         pass
 
     @abstractmethod
-    def get_conversation_by_id(self, conversation_id: UUID) -> Conversation | None:
+    def get_conversation_by_id(self, conversation_id: UUID) -> Conversation:
         pass
 
     @abstractmethod
@@ -30,7 +31,7 @@ class BaseMemoryRepository(ABC):
         pass
 
     @abstractmethod
-    def add_message(self, message: Message) -> None:
+    def save_message(self, message: Message) -> None:
         pass
 
     @abstractmethod
@@ -39,4 +40,12 @@ class BaseMemoryRepository(ABC):
 
     @abstractmethod
     def update_message(self, new_message: Message) -> None:
+        pass
+
+    @abstractmethod
+    def create_user(self, user: User) -> None:
+        pass
+
+    @abstractmethod
+    def get_user(self, user_id: UUID) -> User:
         pass

@@ -17,4 +17,4 @@ class WindowMemoryStrategy(BaseMemoryStrategy):
         return all_messages[-self.window_size:]
 
     def save_message(self, message: Message) -> None:
-        self.repository.add_message(message)
+        self.repository.save_message(message)
