@@ -30,3 +30,8 @@ class ConversationStatus(str, Enum):
     ACTIVE = "active"
     ARCHIVED = "archived"
     DELETED = "deleted"
+
+
+class Intent(str, Enum):
+    EXERCISE = "exercise"
+    TUTOR = "tutor"
