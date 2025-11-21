@@ -4,9 +4,9 @@ from abc import ABC, abstractmethod
 from typing import Generic
 from src.core.types import TMessage, TResponse
 
-from src.clients.config.config_interface import ClientConfig
-from src.clients.client_interface import ClientWrapper
-from src.services.llm.adapters.adapter_interface import MessageAdapter
+from ..clients.config.config_interface import ClientConfig
+from ..clients.client_interface import ClientWrapper
+from ..adapters.adapter_interface import MessageAdapter
 from ..providers.provider_interface import BaseLLMProvider
 
 class BaseLLMBuilder(Generic[TMessage, TResponse], ABC):
