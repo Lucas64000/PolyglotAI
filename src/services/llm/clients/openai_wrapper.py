@@ -5,7 +5,7 @@ from typing import List
 from openai import OpenAI, AzureOpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion
 from .client_interface import ClientWrapper
-from .config.ollama_config import OllamaClientConfig
+from .config.config_interface import ClientConfig
 
 class OpenAIClientWrapper(ClientWrapper[ChatCompletionMessageParam, ChatCompletion], ABC):
     """Wrapper pour les clients compatibles OpenAI (Azure, OpenAI, Ollama, Grok, etc.)."""
@@ -13,7 +13,7 @@ class OpenAIClientWrapper(ClientWrapper[ChatCompletionMessageParam, ChatCompleti
     client: OpenAI | AzureOpenAI
 
     @abstractmethod
-    def __init__(self, config: OllamaClientConfig):
+    def __init__(self, config: ClientConfig):
         pass
 
     def generate(
