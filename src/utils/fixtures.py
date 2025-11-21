@@ -6,7 +6,7 @@ Données d'exemple prêtes à l'emploi pour les tests et démos
 from typing import List
 from uuid import uuid4
 
-from src.agents.core.enums import (
+from src.core.enums import (
     CECRLevel,
     Language,
     Role,
@@ -14,7 +14,6 @@ from src.agents.core.enums import (
 from src.models.conversation_model import (
     Conversation,
     Message,
-    Correction,
 )
 from src.models.user_model import User
 
@@ -76,7 +75,6 @@ sample_conversation_archived = Conversation(
 sample_message_with_errors = Message(
     id=uuid4(),
     conversation_id=sample_conversation_active.id,
-    user_id=sample_user_french_to_english.id,
     content="I go to school yesterday and I see a car red big, it was impressive.",
     role=Role.USER,
 )
@@ -84,7 +82,6 @@ sample_message_with_errors = Message(
 sample_message_correct = Message(
     id=uuid4(),
     conversation_id=sample_conversation_active.id,
-    user_id=sample_user_french_to_english.id,
     content="Yesterday I went to school and ate a big breakfast. It was delicious!",
     role=Role.USER,
 )
@@ -92,25 +89,9 @@ sample_message_correct = Message(
 sample_message_agent_response = Message(
     id=uuid4(),
     conversation_id=sample_conversation_active.id,
-    user_id=sample_user_french_to_english.id,
     content="Great job! We say 'I WENT to school yesterday' and 'I ATE a big breakfast'. What did you have for breakfast?",
     role=Role.ASSISTANT,
 )
-
-
-# ============================================================================
-# CORRECTIONS DE TEST
-# ============================================================================
-
-sample_correction_verb_tense = Correction(
-    id=uuid4(),
-    message_id=sample_message_with_errors.id,
-    original="I go",
-    corrected="I went",
-    start_index=0,
-    end_index=4,
-)
-
 
 # ============================================================================
 # HISTORIQUES DE CONVERSATION DE TEST
@@ -120,28 +101,24 @@ sample_conversation_history = [
     Message(
         id=uuid4(),
         conversation_id=sample_conversation_active.id,
-        user_id=sample_user_french_to_english.id,
         content="Hello! How are you today?",
         role=Role.USER,
     ),
     Message(
         id=uuid4(),
         conversation_id=sample_conversation_active.id,
-        user_id=sample_user_french_to_english.id,
         content="Hi! I'm doing well, thank you. I'm practicing English because I want to improve my conversation skills. How about you?",
         role=Role.ASSISTANT,
     ),
     Message(
         id=uuid4(),
         conversation_id=sample_conversation_active.id,
-        user_id=sample_user_french_to_english.id,
         content="I'm good too. I like learning languages. Yesterday I go to the cinema.",
         role=Role.USER,
     ),
     Message(
         id=uuid4(),
         conversation_id=sample_conversation_active.id,
-        user_id=sample_user_french_to_english.id,
         content="Great! We say 'I went to the cinema yesterday.' What movie did you see?",
         role=Role.ASSISTANT,
     )
@@ -152,14 +129,12 @@ sample_short_history = [
     Message(
         id=uuid4(),
         conversation_id=sample_conversation_active.id,
-        user_id=sample_user_french_to_english.id,
         content="Hello! How are you?",
         role=Role.USER,
     ),
     Message(
         id=uuid4(),
         conversation_id=sample_conversation_active.id,
-        user_id=sample_user_french_to_english.id,
         content="Hi! I'm fine, thank you. And you?",
         role=Role.ASSISTANT,
     )
