@@ -1,0 +1,59 @@
+# Not used yet
+
+# ========================================
+# APP
+# ========================================
+
+app:
+  name: PolyglotAI
+  debug: false
+  log_level: INFO
+
+# ========================================
+# SERVICES 
+# ========================================
+services:
+  neo4j:
+    uri: bolt://localhost:7687
+    database: neo4j
+    pool_size: 50
+    connection_timeout: 30
+  
+  ollama:
+    base_url: http://localhost:11434/v1
+    timeout: 60.0
+    max_retries: 3
+  
+  # Providers LLM configuration
+  providers:
+    ollama:
+      model_name_default: qwen2.5:7b
+      temperature: 0.7
+      max_tokens: 1000
+      extra:
+        timeout: 60.0
+        max_retries: 3
+    
+    azure:
+      model_name_default: gpt-4o-mini
+      api_version: 2025-01-01-preview
+      deployment_name: gpt-4o-mini
+      extra:
+        timeout: 60.0
+        max_retries: 3
+    
+    openai:
+      model_name_default: gpt-4o-mini
+      extra:
+        timeout: 60.0
+        max_retries: 3
+
+# ========================================
+# LLM DEFAULTS
+# ========================================
+general:
+  provider_llm_default: azure
+
+llm:
+  temperature_default: 0.7
+  max_tokens_default: 1000
