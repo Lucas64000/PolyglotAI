@@ -17,6 +17,8 @@ from .ai_exceptions import (
     LLMError,
     LLMResponseError,
     LLMJSONDecodeError,
+    EmbeddingError,
+    EmbeddingResponseError,
 )
 
 __all__ = [
@@ -29,4 +31,6 @@ __all__ = [
     "LLMError",
     "LLMResponseError",
     "LLMJSONDecodeError",
+    "EmbeddingError",
+    "EmbeddingResponseError",
 ]

@@ -192,6 +192,9 @@ class BaseOpenAIChatModel(ABC):
             
         Returns:
             Tuple of (response_text, metadata)
+
+        Raises:
+            LLMResponseError: If response is empty
         """
         response = await self._generate_raw(messages)
         

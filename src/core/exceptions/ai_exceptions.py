@@ -53,3 +53,35 @@ class LLMJSONDecodeError(DomainException):
         self.provider = provider
         self.raw_response = raw_response
         super().__init__(f"LLM JSON decode error with {provider}: {message}")
+
+
+class EmbeddingError(DomainException):
+    """
+    Raised when an embedding API call fails.
+    
+    Examples:
+        - Network timeout
+        - Authentication failure
+        - Rate limiting
+        - Service unavailable
+    """
+    
+    def __init__(self, provider: str, message: str, original_error: Exception | None = None) -> None:
+        self.provider = provider
+        self.original_error = original_error
+        super().__init__(f"Embedding error with {provider}: {message}")
+
+
+class EmbeddingResponseError(DomainException):
+    """
+    Raised when an embedding returns an invalid or empty response.
+    
+    Examples:
+        - Empty response
+        - Malformed response structure
+        - Unexpected response format
+    """
+    
+    def __init__(self, provider: str, message: str) -> None:
+        self.provider = provider
+        super().__init__(f"Embedding response error with {provider}: {message}")
