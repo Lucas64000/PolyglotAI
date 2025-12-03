@@ -12,6 +12,7 @@ from .domain_exceptions import (
     InvalidLanguagePairError,
     InvalidCEFRLevelError,
     SessionNotActiveError,
+    ConfigurationError,
 )
 from .ai_exceptions import (
     LLMError,
@@ -28,6 +29,7 @@ __all__ = [
     "InvalidLanguagePairError",
     "InvalidCEFRLevelError",
     "SessionNotActiveError",
+    "ConfigurationError",
     "LLMError",
     "LLMResponseError",
     "LLMJSONDecodeError",

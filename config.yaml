@@ -1,59 +1,79 @@
-# Not used yet
+# ============================================================================
+# PolyglotAI Configuration
+# ============================================================================
+# This file contains default configuration values.
+# Environment variables ALWAYS override these values.
+#
+# Priority order (highest to lowest):
+#   1. Environment variables
+#   2. This YAML file
+#   3. Default values in code
+# ============================================================================
 
-# ========================================
-# APP
-# ========================================
-
+# ============================================================================
+# APPLICATION
+# ============================================================================
 app:
   name: PolyglotAI
   debug: false
-  log_level: INFO
+  
+  logging:
+    level: INFO        # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format: text       # text or json
+    # file: /var/log/polyglotai/app.log  # Optional log file
 
-# ========================================
-# SERVICES 
-# ========================================
+# ============================================================================
+# AI PROVIDER SELECTION
+# ============================================================================
+# This determines which provider is used for BOTH chat and embeddings.
+# Possible values: azure, openai, ollama
+general:
+  provider_llm_default: azure
+
+# ============================================================================
+# AI PROVIDERS
+# ============================================================================
+providers:
+  # --- OpenAI ---
+  # Requires: OPENAI_API_KEY environment variable
+  openai:
+    chat_model: gpt-4o-mini
+    embedding_model: text-embedding-3-small
+    defaults:
+      temperature: 0.7
+      max_tokens: 1024
+      timeout: 60.0
+      max_retries: 3
+  
+  # --- Azure OpenAI ---
+  # Requires: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT,
+  #           AZURE_OPENAI_CHAT_DEPLOYMENT, AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+  azure:
+    api_version: 2025-01-01-preview
+    defaults:
+      temperature: 0.7
+      max_tokens: 1024
+      timeout: 60.0
+      max_retries: 3
+  
+  # --- Ollama (local) ---
+  # No API key required - runs locally
+  ollama:
+    base_url: http://localhost:11434
+    chat_model: qwen2.5:7b
+    embedding_model: nomic-embed-text
+    defaults:
+      temperature: 0.7
+      max_tokens: 1024
+      timeout: 120.0    # Local models may be slower
+      max_retries: 3
+
+# ============================================================================
+# SERVICES
+# ============================================================================
 services:
   neo4j:
     uri: bolt://localhost:7687
     database: neo4j
     pool_size: 50
     connection_timeout: 30
-  
-  ollama:
-    base_url: http://localhost:11434/v1
-    timeout: 60.0
-    max_retries: 3
-  
-  # Providers LLM configuration
-  providers:
-    ollama:
-      model_name_default: qwen2.5:7b
-      temperature: 0.7
-      max_tokens: 1000
-      extra:
-        timeout: 60.0
-        max_retries: 3
-    
-    azure:
-      model_name_default: gpt-4o-mini
-      api_version: 2025-01-01-preview
-      deployment_name: gpt-4o-mini
-      extra:
-        timeout: 60.0
-        max_retries: 3
-    
-    openai:
-      model_name_default: gpt-4o-mini
-      extra:
-        timeout: 60.0
-        max_retries: 3
-
-# ========================================
-# LLM DEFAULTS
-# ========================================
-general:
-  provider_llm_default: azure
-
-llm:
-  temperature_default: 0.7
-  max_tokens_default: 1000

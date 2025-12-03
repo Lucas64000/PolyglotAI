@@ -86,3 +86,18 @@ class SessionNotActiveError(DomainException):
     def __init__(self, session_id: str) -> None:
         self.session_id = session_id
         super().__init__(f"Session '{session_id}' is not active")
+
+
+class ConfigurationError(DomainException):
+    """
+    Raised when there is a configuration issue.
+    
+    Examples:
+        - Invalid provider configuration
+        - Missing required settings
+        - Unsupported model or deployment
+    """
+    
+    def __init__(self, message: str, config_key: str | None = None) -> None:
+        self.config_key = config_key
+        super().__init__(f"Configuration error: {message}")
