@@ -86,13 +86,25 @@ class Conversation(Entity):
         
         Returns:
             Conversation: a new conversation with empty messages and ACTIVE status
+            
+        Raises:
+            EmptyConversationTitleError: if title is empty
+            ConversationTitleTooLongError: if title is too long
         """
+        cleaned_title = title.strip()
+        if not cleaned_title:
+            raise EmptyConversationTitleError(id)
+        
+        max_len = 100
+        if len(cleaned_title) > max_len:
+            raise ConversationTitleTooLongError(id, len(cleaned_title), max_len)
+
         return cls(
             _id=id,
             _user_id=user_id, 
             _created_at=now,
             _last_activity_at=now,
-            _title=title,
+            _title=cleaned_title,
         )
     
     def add_message(self, new_message_id: UUID, now: datetime, role: Role, content: str) -> ChatMessage:
@@ -181,4 +193,4 @@ class Conversation(Entity):
 
     def __repr__(self) -> str:
         """Readable representation showing status, user, and message count."""
-        return f"[{self.status}]: Conversation of {self.user_id} containing {self.message_count} messages."
+        return f"The Conversation {self.title} contains {self.message_count} messages and is {self.status.value}."

@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import pytest
 
-from src.core.domain.entities import ChatMessage
+from src.core.domain.entities import ChatMessage, Conversation
 from src.core.domain.value_objects import Status, Role
 from src.core.exceptions import ConversationNotWritableError, EmptyConversationTitleError, ConversationTitleTooLongError
 from tests.conftest import MakeConversation
@@ -48,6 +48,54 @@ class TestConversationCreation:
 
         assert conversation.user_id == user_id
 
+    def test_conversation_has_default_title(
+        self, make_conversation: MakeConversation
+    ) -> None:
+        """New conversations have a default title.""" 
+        conversation = make_conversation()
+
+        assert conversation.title == "Conversation"
+
+    def test_conversation_can_have_custom_title(
+        self, make_conversation: MakeConversation
+    ) -> None:
+        """Conversations can be created with a custom title."""
+        conversation = make_conversation(title="Custom Title")
+
+        assert conversation.title == "Custom Title"
+
+    def test_create_conversation_with_empty_title_raises_error(self) -> None:
+        """Creating a conversation with empty title raises EmptyConversationTitleError."""
+        id = uuid4()
+        user_id = uuid4()
+        now = datetime.now(timezone.utc)
+        title = ""
+
+        with pytest.raises(EmptyConversationTitleError):
+            Conversation.create_new(
+                id=id,
+                user_id=user_id,
+                now=now,
+                title=title
+            )
+
+    def test_create_conversation_with_too_long_title_raises_error(
+            self
+        ) -> None:
+        """Creating a conversation with title longer than 100 chars raises ConversationTitleTooLongError."""
+        id = uuid4()
+        user_id = uuid4()
+        now = datetime.now(timezone.utc)
+        long_title = "A" * 101
+
+        with pytest.raises(ConversationTitleTooLongError):
+            Conversation.create_new(
+                id=id,
+                user_id=user_id,
+                now=now,
+                title=long_title
+            )
+        
     def test_conversation_timestamps_are_set(
         self, make_conversation: MakeConversation
     ) -> None:
