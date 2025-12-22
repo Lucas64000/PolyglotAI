@@ -13,9 +13,11 @@ from .repositories import (
     ConversationRepository,
     UserRepository,
 )
+from .time_provider import TimeProvider
 
 __all__ = [
     "ChatProvider",
     "ConversationRepository",
     "UserRepository",
+    "TimeProvider",
 ]
