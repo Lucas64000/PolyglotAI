@@ -5,17 +5,18 @@ Interface for persisting and retrieving conversation entities.
 This port abstracts the database layer for conversation management.
 """
 
-from typing import Protocol
+from abc import ABC, abstractmethod
 from uuid import UUID
 
 from src.core.domain import Conversation
+from src.core.exceptions import ResourceNotFoundError
 
-
-class ConversationRepository(Protocol):
+class ConversationRepository(ABC):
     """
     Port for conversation persistence operations.
     """
 
+    @abstractmethod
     async def save(self, conversation: Conversation) -> None:
         """
         Persist or update a conversation in the repository.
@@ -25,6 +26,7 @@ class ConversationRepository(Protocol):
         """
         ...
     
+    @abstractmethod
     async def find_by_id(self, id: UUID) -> Conversation | None:
         """
         Retrieve a conversation by its ID with message history.
@@ -50,8 +52,12 @@ class ConversationRepository(Protocol):
         Raises:
             ResourceNotFoundError: If conversation is not found
         """
-        ...
+        conv = await self.find_by_id(id=id)
+        if conv is None:
+            raise ResourceNotFoundError(resource_type="Conversation", resource_id=id)
+        return conv
     
+    @abstractmethod
     async def remove(self, id: UUID) -> None:
         """
         Delete a conversation from the repository.
