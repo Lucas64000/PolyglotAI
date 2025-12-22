@@ -1,0 +1,80 @@
+# ============================================================================
+# PolyglotAI Configuration
+# ============================================================================
+# This file contains default configuration values.
+# Environment variables ALWAYS override these values.
+#
+# Priority order (highest to lowest):
+#   1. Environment variables
+#   2. This YAML file
+#   3. Default values in code
+# ============================================================================
+
+# ============================================================================
+# APPLICATION
+# ============================================================================
+app:
+  name: PolyglotAI
+  debug: false
+  
+  logging:
+    level: INFO        # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format: text       # text or json
+
+# ============================================================================
+# AI PROVIDER SELECTION
+# ============================================================================
+# This determines which provider is used for BOTH chat and embeddings.
+# Possible values: azure, openai, ollama
+general:
+  provider_llm_default: ollama
+
+# ============================================================================
+# AI PROVIDERS
+# ============================================================================
+providers:
+  # --- OpenAI ---
+  # Requires: OPENAI_API_KEY environment variable
+  openai:
+    chat_model: gpt-4o-mini
+    embedding_model: text-embedding-3-small
+    defaults:
+      temperature: 0.7
+      max_tokens: 1024
+      timeout: 60.0
+      max_retries: 3
+      
+  # --- Azure OpenAI ---
+  # Requires: AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT,
+  #           AZURE_OPENAI_CHAT_DEPLOYMENT, AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+  azure:
+    chat_deployment: gpt-4o-mini
+    embedding_deployment: text-embedding-3-small
+    api_version: 2025-01-01-preview
+    defaults:
+      temperature: 0.7
+      max_tokens: 1024
+      timeout: 60.0
+      max_retries: 3
+  
+  # --- Ollama (local) ---
+  # No API key required - runs locally
+  ollama:
+    base_url: http://localhost:11434
+    chat_model: qwen2.5:7b
+    embedding_model: nomic-embed-text
+    defaults:
+      temperature: 0.7
+      max_tokens: 1024
+      timeout: 120.0    # Local models may be slower
+      max_retries: 3
+
+# ============================================================================
+# SERVICES
+# ============================================================================
+services:
+  neo4j:
+    uri: bolt://localhost:7687
+    database: neo4j
+    pool_size: 50
+    connection_timeout: 30
