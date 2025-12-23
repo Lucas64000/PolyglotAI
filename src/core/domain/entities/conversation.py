@@ -1,7 +1,7 @@
 """
 Conversation Entity
 
-Represents a conversation thread between a user and the tutor.
+Represents a conversation thread between a student and the teacher.
 """
 
 from __future__ import annotations
@@ -19,29 +19,29 @@ from src.core.exceptions import ConversationNotWritableError, EmptyConversationT
 @dataclass(eq=False, kw_only=True, slots=True)
 class Conversation(Entity):
     """
-    Represents a learning conversation between a user and the tutor.
+    Represents a learning conversation between a student and the teacher.
     
     A conversation groups related messages and tracks their lifecycle.
     Conversations can be ACTIVE (editable), ARCHIVED (read-only), or DELETED.
 
     Attributes:
-        _user_id: Identifier of the conversation owner (learner)
+        _student_id: Identifier of the conversation owner (student)
         _title: Title of the conversation
         _status: Current conversation status (ACTIVE, ARCHIVED, DELETED)
         _messages: History of the conversation
         _last_activity_at: Timestamp of the last activity (message addition or status change)
     """
 
-    _user_id: UUID
+    _student_id: UUID
     _last_activity_at: datetime
     _title: str = field(default_factory=lambda: "Conversation")
     _status: Status = field(default_factory=lambda: Status.ACTIVE)
-    _messages: list[ChatMessage] = field(default_factory=list)
+    _messages: list[ChatMessage] = field(default_factory=list) # type: ignore
 
     @property
-    def user_id(self) -> UUID:
-        """Return the conversation owner's user ID."""
-        return self._user_id
+    def student_id(self) -> UUID:
+        """Return the conversation owner's ID."""
+        return self._student_id
     
     @property
     def title(self) -> str:
@@ -71,7 +71,7 @@ class Conversation(Entity):
     @classmethod
     def create_new(
         cls, id: UUID, 
-        user_id: UUID, 
+        student_id: UUID, 
         now: datetime, 
         title: str = "Conversation"
     ) -> Conversation:
@@ -80,7 +80,7 @@ class Conversation(Entity):
         
         Args:
             id: Unique identifier for the conversation
-            user_id: Identifier of the conversation owner
+            student_id: Identifier of the conversation owner
             now: Current timestamp for creation
             title: Title of the conversation (defaults to "Conversation")
         
@@ -101,7 +101,7 @@ class Conversation(Entity):
 
         return cls(
             _id=id,
-            _user_id=user_id, 
+            _student_id=student_id, 
             _created_at=now,
             _last_activity_at=now,
             _title=cleaned_title,
@@ -118,7 +118,7 @@ class Conversation(Entity):
             ChatMessage: a message within the conversation
         """
         if not self.status.is_writable:
-            raise ConversationNotWritableError(self.id, self.status)
+            raise ConversationNotWritableError(self.id, self.status.value)
             
         self.touch(now)
 
@@ -179,7 +179,7 @@ class Conversation(Entity):
             now: Current timestamp
         """
         if not self.status.is_writable:
-            raise ConversationNotWritableError(self.id, self.status)
+            raise ConversationNotWritableError(self.id, self.status.value)
         
         cleaned_title = new_title.strip()
         if not cleaned_title:
@@ -192,5 +192,5 @@ class Conversation(Entity):
         self.touch(now)
 
     def __repr__(self) -> str:
-        """Readable representation showing status, user, and message count."""
+        """Readable representation showing status, student, and message count."""
         return f"The Conversation {self.title} contains {self.message_count} messages and is {self.status.value}."

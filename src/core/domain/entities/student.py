@@ -1,7 +1,7 @@
 """
-User Entity
+Student Entity
 
-Represents an application user (learner).
+Represents an application student.
 """
 
 from __future__ import annotations
@@ -20,16 +20,16 @@ from src.core.exceptions import InvalidLanguagePairError, InvalidLevelChangeErro
 
 
 @dataclass(eq=False, kw_only=True, slots=True)
-class User(Entity):
+class Student(Entity):
     """
-    Represents a registered learner in the application.
+    Represents a student in the application.
     
-    Each user has a native language (mother tongue) and a target language
+    Each student has a native language (mother tongue) and a target language
     they are learning. These cannot be the same.
     
     Attributes:
-        _native_lang: Language user speaks fluently
-        _target_lang: Language user is learning
+        _native_lang: Language student speaks fluently
+        _target_lang: Language student is learning
         _level: Current proficiency level (CEFR)
     """
 
@@ -39,17 +39,17 @@ class User(Entity):
 
     @property
     def native_lang(self) -> Language:
-        """Return the user's native language."""
+        """Return the student's native language."""
         return self._native_lang
 
     @property
     def target_lang(self) -> Language:
-        """Return the language the user is learning."""
+        """Return the language the student is learning."""
         return self._target_lang
 
     @property
     def level(self) -> CEFRLevel:
-        """Return the user's current proficiency level."""
+        """Return the student's current proficiency level."""
         return self._level
  
     @classmethod
@@ -60,12 +60,12 @@ class User(Entity):
         native_lang: Language, 
         target_lang: Language,
         level: CEFRLevel,
-    ) -> User:
+    ) -> Student:
         """
-        Factory method for creating a new user.
+        Factory method for creating a new student.
         
         Returns:
-            User: a new user with different native and target languages
+            Student: a new student with different native and target languages
         """
         return cls(
             _id=id,
@@ -109,7 +109,7 @@ class User(Entity):
 
     def assess_level(self, new_level: CEFRLevel) -> None:
         """
-        Update the user's proficiency level.
+        Update the student's proficiency level.
         
         Only allows changes to adjacent levels (next or previous).
         
@@ -120,13 +120,13 @@ class User(Entity):
             InvalidLevelChangeError: If new level is not adjacent to current level
         """
         if not self.level.is_adjacent_to(new_level):
-            raise InvalidLevelChangeError(self.level, new_level)
+            raise InvalidLevelChangeError(self.level.value, new_level.value)
         self._level = new_level
 
     def __post_init__(self) -> None:
-        """Validate user invariants."""
+        """Validate student invariants."""
         if self.native_lang == self.target_lang:
             raise InvalidLanguagePairError(self.native_lang.code, self.target_lang.code)
 
     def __repr__(self) -> str:
-        return f"The user speaks {self.native_lang.code} and is learning {self.target_lang.code}"
+        return f"The student speaks {self.native_lang.code} and is learning {self.target_lang.code}"

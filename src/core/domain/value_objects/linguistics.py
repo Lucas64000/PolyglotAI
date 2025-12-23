@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .language import Language
 
-class PartOfSpeech(str, Enum):
+class PartOfSpeech(Enum):
     """
     Standard parts of speech for linguistic analysis.
 

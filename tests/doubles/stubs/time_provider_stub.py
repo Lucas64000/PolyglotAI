@@ -1,6 +1,6 @@
 
 from datetime import datetime
-from src.application.ports import TimeProvider
+from src.core.ports import TimeProvider
 
 class StubTimeProvider(TimeProvider):
     def __init__(self, now: datetime):

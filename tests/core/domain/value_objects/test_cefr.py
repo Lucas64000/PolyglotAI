@@ -5,6 +5,7 @@ Tests for CEFRLevel value object.
 from __future__ import annotations
 
 import pytest
+from typing import Any
 
 from src.core.domain.value_objects import CEFRLevel
 
@@ -48,3 +49,22 @@ class TestCEFRLevelCategories:
     def test_is_adjacent_to(self, level: CEFRLevel, other: CEFRLevel, expected: bool):
         """Adjacency is strictly defined as a distance of 1 rank."""
         assert level.is_adjacent_to(other) is expected
+
+    @pytest.mark.parametrize("invalid_type", [
+        "B2",           
+        2,              
+        None,           
+    ], ids=["string", "int", "none"])
+    def test_comparison_with_different_types_raises_type_error(self, invalid_type: Any):
+        """Comparing CEFRLevel with non-CEFRLevel types raises TypeError."""
+        with pytest.raises(TypeError):
+            CEFRLevel.B1 < invalid_type # type: ignore
+    
+    @pytest.mark.parametrize("invalid_type", [
+    "B2",           
+    2,              
+    None,           
+    ], ids=["string", "int", "none"])
+    def test_equality_with_different_types_returns_false(self, invalid_type: Any):
+        """Equality comparison with non-CEFRLevel types returns False (not error)."""
+        assert (CEFRLevel.B1 == invalid_type) is False

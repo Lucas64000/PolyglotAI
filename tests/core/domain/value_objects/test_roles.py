@@ -1,7 +1,7 @@
 """
 Tests for Role value object.
 
-Role represents the author of a chat message: USER, ASSISTANT, or SYSTEM.
+Role represents the author of a chat message: STUDENT or TEACHER.
 """
 
 from __future__ import annotations
@@ -14,13 +14,11 @@ from src.core.domain.value_objects import Role
 class TestRoleClassification:
     """Tests for role type classification."""
 
-    @pytest.mark.parametrize("role, is_human, is_ai, is_system", [
-        (Role.USER, True, False, False),
-        (Role.ASSISTANT, False, True, False),
-        (Role.SYSTEM, False, False, True),
+    @pytest.mark.parametrize("role, is_student, is_teacher", [
+        (Role.STUDENT, True, False),
+        (Role.TEACHER, False, True),
     ])
-    def test_classification_logic(self, role: Role, is_human: bool, is_ai: bool, is_system: bool):
+    def test_classification_logic(self, role: Role, is_student: bool, is_teacher: bool):
         """Ensure correct role-to-type mapping."""
-        assert role.is_human is is_human
-        assert role.is_ai is is_ai
-        assert role.is_system is is_system
+        assert role.is_student is is_student
+        assert role.is_teacher is is_teacher

@@ -1,7 +1,8 @@
-from .conversation import ConversationRepository
-from .user import UserRepository
+
+from .conversation_repo import ConversationRepository
+from .student_repo import StudentRepository
 
 __all__ = [
     "ConversationRepository",
-    "UserRepository",
+    "StudentRepository",
 ]

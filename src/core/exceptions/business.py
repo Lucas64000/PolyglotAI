@@ -12,7 +12,7 @@ from .base import DomainException
 class BusinessRuleViolation(DomainException):
     """Base class for invalid user actions violating domain invariants."""
 
-# Conversations errors 
+# Conversation errors
 
 class InvalidConversationStateError(BusinessRuleViolation):
     """Raised when a conversation is in an invalid state and cannot be instanciated or restored."""
@@ -45,7 +45,7 @@ class ConversationTitleTooLongError(BusinessRuleViolation):
             f"Conversation '{conversation_id}' title is too long ({title_length} chars, max {max_length})."
         )
 
-# User errors
+# Student errors
 
 class InvalidLanguagePairError(BusinessRuleViolation):
     """Raised when the native and target languages are incompatible."""
@@ -74,17 +74,9 @@ class InvalidLanguageIsoCodeError(BusinessRuleViolation):
 # ChatMessage errors
 
 class InvalidChatMessageContentError(BusinessRuleViolation):
-    """Raised when a chat message violates content rules based on its role."""
-    def __init__(self, message_id: UUID, role: str) -> None:
+    """Raised when a chat message violates content rules based."""
+    def __init__(self) -> None:
         super().__init__(
-            f"Message '{message_id}' with role '{role}' must have non-empty content."
-        )
-
-
-class InvalidChatMessageEditError(BusinessRuleViolation):
-    """Raised when trying to edit a message that is not from a user."""
-    def __init__(self, message_id: UUID, role: str) -> None:
-        super().__init__(
-            f"Cannot edit message '{message_id}' with role '{role}'. Only USER messages can be edited."
+            f"The message must not be empty."
         )
 

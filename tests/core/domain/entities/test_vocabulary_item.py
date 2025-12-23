@@ -1,7 +1,7 @@
 """
 Tests for VocabularyItem entity.
 
-VocabularyItem represents the link between a User and a learned word (Lexeme).
+VocabularyItem represents the link between a Student and a learned word (Lexeme).
 It tracks review progress and last review timestamp.
 """
 
@@ -28,7 +28,7 @@ class TestVocabularyItemCreation:
 
         assert vocab.review_count == 1
         assert vocab.lexeme is not None
-        assert vocab.user_id is not None
+        assert vocab.student_id is not None
 
     def test_vocabulary_item_with_custom_lexeme(
         self, make_vocab: MakeVocab
@@ -46,14 +46,14 @@ class TestVocabularyItemCreation:
         assert vocab.lexeme.lemma.pos == PartOfSpeech.VERB
         assert vocab.lexeme.definition == "to eat"
 
-    def test_vocabulary_item_has_user_id(
+    def test_vocabulary_item_has_student_id(
         self, make_vocab: MakeVocab
     ) -> None:
-        """Vocabulary items are linked to a user."""
-        user_id = uuid4()
-        vocab = make_vocab(user_id=user_id)
+        """Vocabulary items are linked to a student."""
+        student_id = uuid4()
+        vocab = make_vocab(student_id=student_id)
 
-        assert vocab.user_id == user_id
+        assert vocab.student_id == student_id
 
     def test_vocabulary_item_initial_review_count(
         self, make_vocab: MakeVocab

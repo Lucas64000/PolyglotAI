@@ -15,7 +15,7 @@ from .entities import (
     ChatMessage,
     Conversation,
     Entity,
-    User,
+    Student,
     VocabularyItem,
 )
 from .value_objects import (
@@ -36,7 +36,7 @@ from .value_objects import (
     VocabularySource,
     GenerationStyle,
     CreativityLevel,
-    TutorProfile,
+    TeacherProfile,
 )
 
 __all__ = [
@@ -44,7 +44,7 @@ __all__ = [
     "ChatMessage",
     "Conversation",
     "Entity",
-    "User",
+    "Student",
     "VocabularyItem",
     # Value Objects
     "Role",
@@ -64,5 +64,5 @@ __all__ = [
     "VocabularySource",
     "GenerationStyle",
     "CreativityLevel",
-    "TutorProfile",
+    "TeacherProfile",
 ]

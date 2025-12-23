@@ -11,7 +11,7 @@ from functools import total_ordering, lru_cache
 from enum import Enum
 
 @total_ordering
-class CEFRLevel(str, Enum):
+class CEFRLevel(Enum):
     """
     Common European Framework of Reference for Languages levels.
     
@@ -58,7 +58,7 @@ class CEFRLevel(str, Enum):
 
     @property
     def description(self) -> str:
-        """Get a human-readable description of the level."""
+        """Get a description of the level."""
         descriptions = {
             CEFRLevel.A1: "Beginner - Can understand basic phrases",
             CEFRLevel.A2: "Elementary - Can communicate in simple tasks",

@@ -12,7 +12,7 @@ from uuid import UUID
 
 from src.core.domain.entities.base import Entity
 from src.core.domain.value_objects import Role
-from src.core.exceptions import InvalidChatMessageContentError, InvalidChatMessageEditError
+from src.core.exceptions import InvalidChatMessageContentError
 
 @dataclass(eq=False, kw_only=True, slots=True)
 class ChatMessage(Entity):
@@ -20,12 +20,11 @@ class ChatMessage(Entity):
     Represents a message in a conversation.
     
     Messages are the atomic units of conversation:
-    - SYSTEM messages set context/instructions
-    - USER messages are learner inputs
-    - ASSISTANT messages are tutor responses
+    - STUDENT messages are student inputs
+    - TEACHER messages are teacher responses
     
     Attributes:
-        _role: Who sent the message (SYSTEM, USER, ASSISTANT)
+        _role: Who sent the message (STUDENT, TEACHER)
         _content: The content of the message
     """
     
@@ -43,19 +42,14 @@ class ChatMessage(Entity):
         return self._content
 
     @property
-    def is_from_user(self) -> bool:
-        """Check if this message is from the user."""
-        return self.role.is_human
+    def is_from_student(self) -> bool:
+        """Check if this message is from the student."""
+        return self.role.is_student
     
     @property
-    def is_from_assistant(self) -> bool:
-        """Check if this message is from the AI assistant."""
-        return self.role.is_ai
-    
-    @property
-    def is_system_message(self) -> bool:
-        """Check if this is a system message."""
-        return self.role.is_system
+    def is_from_teacher(self) -> bool:
+        """Check if this message is from the teacher."""
+        return self.role.is_teacher
 
     @classmethod
     def create_new(
@@ -82,33 +76,38 @@ class ChatMessage(Entity):
         """
         Edit the content of this message.
         
-        Only USER messages can be edited.
-        
         Args:
             new_content: The new content for the message
             
         Raises:
-            InvalidChatMessageEditError: If message is not from USER
-            InvalidChatMessageContentError: If new content is empty
+            InvalidChatMessageContentError: If the new content is empty
         """
-        if self.role != Role.USER:
-            raise InvalidChatMessageEditError(self.id, self.role.value)
-        if not new_content:
-            raise InvalidChatMessageContentError(self.id, self.role.value)
+        self._validate_content(new_content)
         self._content = new_content
+
+    def _validate_content(self, content: str) -> None:
+        """
+        Validate the content of a message.
+
+        Messages cannot be empty.
+
+        Args:
+            content: The content of the message
+
+        Raises:
+            InvalidChatMessageContentError: If the content is empty
+        """
+        if not content or not content.strip():
+            raise InvalidChatMessageContentError()
 
     def __post_init__(self) -> None:
         """
-        Validate the message content based on its role.
-        
-        System messages may have empty content (they represent prompts),
-        but user and assistant messages must have non-empty content.
+        Validate the message.
         
         Raises:
-            InvalidChatMessageContentError: If non-system message has no content
+            InvalidChatMessageContentError: If the message has no content
         """
-        if self.role != Role.SYSTEM and not self.content:
-            raise InvalidChatMessageContentError(self.id, self.role.value)
+        self._validate_content(self.content)
     
     def __repr__(self) -> str:
         return f"[{self.role.value.upper()}]: {self.content}"

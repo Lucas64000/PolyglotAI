@@ -7,7 +7,7 @@ Value objects have no unique identity and are compared by value.
 Categories:
 - Language & Learning: Language, CEFRLevel
 - Conversation: Role, Status
-- Tutor Configuration: TutorProfile, CreativityLevel, GenerationStyle
+- Teacher Configuration: TeacherProfile, CreativityLevel, GenerationStyle
 - Linguistics: PartOfSpeech, Gender, Tense, Person, Morphology, Lemma, Lexeme, WordForm, SemanticRelationship
 - Vocabulary: VocabularySource
 """
@@ -29,10 +29,10 @@ from .cefr_level import CEFRLevel
 from .language import Language
 from .status import Status
 from .vocab_source import VocabularySource
-from .tutor_profile import (
+from .teacher_profile import (
     GenerationStyle,
     CreativityLevel,
-    TutorProfile,
+    TeacherProfile,
 )
 
 __all__ = [
@@ -54,8 +54,8 @@ __all__ = [
     "CEFRLevel",
     "Language",
     "VocabularySource",
-    # Tutor Configuration
+    # Teacher Configuration
     "GenerationStyle",
     "CreativityLevel",
-    "TutorProfile",
+    "TeacherProfile",
 ]

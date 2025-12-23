@@ -1,15 +1,15 @@
 """
-Tutor Profile Value Object
+Teacher Profile Value Object
 
-Defines the configuration for the tutor's behavior and generation style.
+Defines the configuration for the teacher's behavior and generation style.
 """
 
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 
-class GenerationStyle(str, Enum):
+class GenerationStyle(Enum):
     """
-    Defines the pedagogical approach for generating tutoring responses.
+    Defines the pedagogical approach for the teacher's responses.
     
     Styles:
         PRACTICE: Focus on exercises and drills
@@ -25,7 +25,7 @@ class GenerationStyle(str, Enum):
 
 class CreativityLevel(IntEnum):
     """
-    Controls the variability and expressiveness of generated responses.
+    Controls the variability and expressiveness of the teacher's responses.
     
     Levels:
         STRICT: Highly deterministic, consistent responses
@@ -40,17 +40,13 @@ class CreativityLevel(IntEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class TutorProfile:
+class TeacherProfile:
     """
-    Configures the AI tutor's behavior and response generation.
-    
-    The MVP does not validate all compatibility combinations
-    (e.g., corrective style with expressive creativity may be ambiguous,
-    but is acceptable for now).
+    Configures the teacher's behavior.
     
     Attributes:
-        creativity_level: How varied and expressive the tutor responses should be
-        generation_style: The pedagogical approach for generating responses
+        creativity_level: How varied and expressive the teacher responses should be
+        generation_style: The pedagogical approach for giving responses
     """
 
     creativity_level: CreativityLevel = CreativityLevel.MODERATE

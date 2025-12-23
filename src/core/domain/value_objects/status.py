@@ -6,7 +6,7 @@ Represents the status of a user conversation.
 
 from enum import Enum
 
-class Status(str, Enum):
+class Status(Enum):
     """
     Represents the status of a conversation.
     

@@ -11,13 +11,13 @@ Infrastructure provides concrete implementations.
 from .chat_provider import ChatProvider
 from .repositories import (
     ConversationRepository,
-    UserRepository,
+    StudentRepository,
 )
 from .time_provider import TimeProvider
 
 __all__ = [
     "ChatProvider",
     "ConversationRepository",
-    "UserRepository",
+    "StudentRepository",
     "TimeProvider",
 ]

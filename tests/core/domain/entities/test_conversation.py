@@ -39,14 +39,14 @@ class TestConversationCreation:
         assert conversation.status == Status.ACTIVE
         assert conversation.status.is_active is True
 
-    def test_conversation_has_user_id(
+    def test_conversation_has_student_id(
         self, make_conversation: MakeConversation
     ) -> None:
         """Conversations are associated with a user."""
-        user_id = uuid4()
-        conversation = make_conversation(user_id=user_id)
+        student_id = uuid4()
+        conversation = make_conversation(student_id=student_id)
 
-        assert conversation.user_id == user_id
+        assert conversation.student_id == student_id
 
     def test_conversation_has_default_title(
         self, make_conversation: MakeConversation
@@ -67,14 +67,14 @@ class TestConversationCreation:
     def test_create_conversation_with_empty_title_raises_error(self) -> None:
         """Creating a conversation with empty title raises EmptyConversationTitleError."""
         id = uuid4()
-        user_id = uuid4()
+        student_id = uuid4()
         now = datetime.now(timezone.utc)
         title = ""
 
         with pytest.raises(EmptyConversationTitleError):
             Conversation.create_new(
                 id=id,
-                user_id=user_id,
+                student_id=student_id,
                 now=now,
                 title=title
             )
@@ -84,14 +84,14 @@ class TestConversationCreation:
         ) -> None:
         """Creating a conversation with title longer than 100 chars raises ConversationTitleTooLongError."""
         id = uuid4()
-        user_id = uuid4()
+        student_id = uuid4()
         now = datetime.now(timezone.utc)
         long_title = "A" * 101
 
         with pytest.raises(ConversationTitleTooLongError):
             Conversation.create_new(
                 id=id,
-                user_id=user_id,
+                student_id=student_id,
                 now=now,
                 title=long_title
             )
@@ -120,7 +120,7 @@ class TestConversationMessages:
         conversation.add_message(
             new_message_id=uuid4(),
             now=now,
-            role=Role.USER,
+            role=Role.STUDENT,
             content="Hello"
         )
 
@@ -136,13 +136,13 @@ class TestConversationMessages:
         message = conversation.add_message(
             new_message_id=uuid4(),
             now=now,
-            role=Role.USER,
+            role=Role.STUDENT,
             content="Hello"
         )
 
         assert isinstance(message, ChatMessage)
         assert message.content == "Hello"
-        assert message.role == Role.USER
+        assert message.role == Role.STUDENT
         
     def test_add_message_updates_last_activity(
         self, make_conversation: MakeConversation
@@ -155,7 +155,7 @@ class TestConversationMessages:
         conversation.add_message(
             new_message_id=uuid4(),
             now=later_time,
-            role=Role.USER,
+            role=Role.STUDENT,
             content="Hello"
         )
 
@@ -171,19 +171,19 @@ class TestConversationMessages:
         conversation.add_message(
             new_message_id=uuid4(),
             now=now,
-            role=Role.USER,
+            role=Role.STUDENT,
             content="Hello"
         )
         conversation.add_message(
             new_message_id=uuid4(),
             now=now + timedelta(seconds=1),
-            role=Role.ASSISTANT,
+            role=Role.TEACHER,
             content="Hi there!"
         )
         conversation.add_message(
             new_message_id=uuid4(),
             now=now + timedelta(seconds=2),
-            role=Role.USER,
+            role=Role.STUDENT,
             content="How are you?"
         )
 
@@ -199,7 +199,7 @@ class TestConversationMessages:
         conversation.add_message(
             new_message_id=uuid4(),
             now=now,
-            role=Role.USER,
+            role=Role.STUDENT,
             content="Hello"
         )
 
@@ -218,13 +218,13 @@ class TestConversationMessages:
         msg1 = conversation.add_message(
             new_message_id=uuid4(),
             now=now,
-            role=Role.USER,
+            role=Role.STUDENT,
             content="First"
         )
         msg2 = conversation.add_message(
             new_message_id=uuid4(),
             now=now + timedelta(seconds=1),
-            role=Role.ASSISTANT,
+            role=Role.TEACHER,
             content="Second"
         )
 
@@ -271,7 +271,7 @@ class TestConversationLifecycle:
             conversation.add_message(
                 new_message_id=uuid4(),
                 now=now + timedelta(seconds=1),
-                role=Role.USER,
+                role=Role.STUDENT,
                 content="Too late"
             )
 
@@ -310,7 +310,7 @@ class TestConversationLifecycle:
             conversation.add_message(
                 new_message_id=uuid4(),
                 now=now + timedelta(seconds=1),
-                role=Role.USER,
+                role=Role.STUDENT,
                 content="Message to deleted conversation"
             )
 

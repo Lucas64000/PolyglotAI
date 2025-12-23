@@ -1,7 +1,7 @@
 """
 VocabularyItem Entity
 
-Represents the link between a User and a learned word (Lexeme).
+Represents the link between a Student and a learned word (Lexeme).
 """
 
 from __future__ import annotations
@@ -17,28 +17,28 @@ from src.core.domain.value_objects import Lexeme
 @dataclass(eq=False, kw_only=True, slots=True)
 class VocabularyItem(Entity):
     """
-    Represents the link between a User and a Word.
+    Represents the link between a Student and a Word.
     Tracks progress, mastery, and last review.
     
     Each vocabulary item tracks how many times a word has been reviewed
     and when it was last encountered in a conversation.
     
     Attributes:
-        _user_id: Identifier of the user who learned this word
+        _student_id: Identifier of the student who learned this word
         _lexeme: The word concept being tracked
         _last_reviewed_at: Timestamp of the last review/usage
         _review_count: Number of times the word has been reviewed
     """
     
-    _user_id: UUID
+    _student_id: UUID
     _lexeme: Lexeme
     _last_reviewed_at: datetime
     _review_count: int = field(default=1)
 
     @property
-    def user_id(self) -> UUID:
-        """Return the user ID who owns this vocabulary item."""
-        return self._user_id
+    def student_id(self) -> UUID:
+        """Return the student ID who owns this vocabulary item."""
+        return self._student_id
 
     @property
     def lexeme(self) -> Lexeme:
@@ -60,7 +60,7 @@ class VocabularyItem(Entity):
         cls,
         id: UUID,
         now: datetime,
-        user_id: UUID,
+        student_id: UUID,
         lexeme: Lexeme,
     ) -> VocabularyItem:
         """
@@ -72,7 +72,7 @@ class VocabularyItem(Entity):
         return cls(
             _id=id,
             _created_at=now,
-            _user_id=user_id,
+            _student_id=student_id,
             _lexeme=lexeme,
             _last_reviewed_at=now,
             _review_count=1,

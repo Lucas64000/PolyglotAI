@@ -8,16 +8,16 @@ from __future__ import annotations
 
 from enum import Enum
 
-class VocabularySource(str, Enum):
+class VocabularySource(Enum):
     """
     Source classification for vocabulary learning.
     
-    Helps track where learners encounter and produce vocabulary:
-    - LEARNER: New words produced or used by the learner in conversation
-    - TUTOR: New words introduced by the AI tutor in explanations or responses
+    Helps track where students encounter and produce vocabulary:
+    - STUDENT: New words produced or used by the student in conversation
+    - TEACHER: New words introduced by the teacher in explanations or responses
     
     This distinction is useful for adapting teaching strategy and understanding
-    which words the learner is actively producing versus passively receiving.
+    which words the student is actively producing versus passively receiving.
     """
-    LEARNER = "learner"
-    TUTOR = "tutor"
+    STUDENT = "student"
+    TEACHER = "teacher"
