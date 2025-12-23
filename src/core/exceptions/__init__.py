@@ -1,13 +1,16 @@
 """
-Domain Exceptions
+Core Exceptions
 
-Custom exceptions for the domain layer.
+Custom exceptions for the core layer.
 These represent business rule violations and domain errors.
 """
 
-from .base import DomainException
+from .base import (
+    PolyglotException,
+    DomainException, 
+    InfrastructureError,
+)
 from .business import (
-    BusinessRuleViolation,
     InvalidConversationStateError,
     ConversationNotWritableError,
     EmptyConversationTitleError,
@@ -15,25 +18,37 @@ from .business import (
     InvalidLanguagePairError,
     InvalidLanguageIsoCodeError,
     InvalidChatMessageContentError,
-    InvalidChatMessageEditError,
     InvalidLevelChangeError,
 )
-from .resources import ResourceNotFoundError, ResourceAlreadyExistsError
+from .resources import (
+    ResourceNotFoundError, 
+    ResourceAlreadyExistsError
+)
+from .infrastructure import (
+    ExternalServiceError,
+    ChatProviderError,
+    TeacherResponseError,
+)
 
 __all__ = [
+    # Base
+    "PolyglotException",
     "DomainException",
-    # Business
-    "BusinessRuleViolation",
+    "InfrastructureError",
+    # Business Rules
     "InvalidConversationStateError",
     "ConversationNotWritableError",
     "EmptyConversationTitleError",
     "ConversationTitleTooLongError",
     "InvalidLanguagePairError",
     "InvalidLanguageIsoCodeError",
-    "InvalidChatMessageContentError",
-    "InvalidChatMessageEditError",
     "InvalidLevelChangeError",
-    # Resources
-    "ResourceNotFoundError", 
+    "InvalidChatMessageContentError",
+    "ResourceNotFoundError",
     "ResourceAlreadyExistsError",
+    "InvalidLevelChangeError",
+    # Ports rules
+    "ExternalServiceError",
+    "ChatProviderError",
+    "TeacherResponseError",
 ]
