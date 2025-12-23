@@ -52,3 +52,7 @@ class Entity:
         Hash based on identity (ID), allowing entities to be used in sets and as dict keys.
         """
         return hash(self.id)
+    
+    
+class AggregateRoot(Entity):
+    pass

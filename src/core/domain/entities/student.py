@@ -1,5 +1,5 @@
 """
-Student Entity
+Student AggregateRoot
 
 Represents an application student.
 """
@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from uuid import UUID
 from datetime import datetime
 
-from src.core.domain.entities.base import Entity
+from src.core.domain.entities.base import AggregateRoot
 from src.core.domain.value_objects import (
     Language,
     CEFRLevel,
@@ -20,7 +20,7 @@ from src.core.exceptions import InvalidLanguagePairError, InvalidLevelChangeErro
 
 
 @dataclass(eq=False, kw_only=True, slots=True)
-class Student(Entity):
+class Student(AggregateRoot):
     """
     Represents a student in the application.
     

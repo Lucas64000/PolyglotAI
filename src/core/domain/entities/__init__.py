@@ -4,16 +4,17 @@ Domain Entities
 Entities are objects with a distinct identity that persists over time.
 """
 
-from .base import Entity
-from .chat_message import ChatMessage
+from .base import Entity, AggregateRoot
+from .conversation import ChatMessage, Conversation
 from .student import Student
-from .conversation import Conversation
-from .vocabulary_item import VocabularyItem
+from .learning import VocabularyItem, VocabularySource
 
 __all__ = [
     "Entity",
+    "AggregateRoot",
     "ChatMessage",
-    "Student",
     "Conversation",
+    "Student",
     "VocabularyItem",
+    "VocabularySource",
 ]

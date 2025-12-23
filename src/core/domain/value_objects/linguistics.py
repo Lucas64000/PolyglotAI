@@ -7,11 +7,121 @@ Defines linguistic and grammatical concepts for language analysis.
 from __future__ import annotations
 
 from enum import Enum
+from functools import total_ordering, lru_cache
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .language import Language
+from src.core.exceptions import InvalidLanguageIsoCodeError
+
+
+@dataclass(frozen=True, slots=True)
+class Language:
+    """
+    Represents a language with ISO 639-1 code validation.
+    
+    The code is normalized to lowercase on instantiation.
+    
+    Attributes:
+        code: ISO 639-1 language code (2 characters)
+    
+    Examples:
+        >>> english = Language("en")
+        >>> spanish = Language("ES")  # lowered to "es"
+        >>> french = Language(" fr")  # stripped to "fr" 
+    """
+    code: str
+    
+    def __post_init__(self) -> None:
+        """
+        Validate the language code format.
+        
+        Normalizes the code to lowercase and validates ISO 639-1 format (2 characters).
+        
+        Raises:
+            InvalidLanguageIsoCodeError: If code is not 2 alphabetic characters
+        """
+        normalized = self.code.lower().strip()
+        # We need to use setattr because this is a frozen dataclass
+        object.__setattr__(self, "code", normalized)
+        if not self.code.isalpha() or len(self.code) != 2:
+            raise InvalidLanguageIsoCodeError(self.code)
+
+
+@total_ordering
+class CEFRLevel(Enum):
+    """
+    Common European Framework of Reference for Languages levels.
+    
+    Levels are ordered from beginner (A1) to proficient (C2).
+    Supports comparison operations (e.g., CEFRLevel.B1 < CEFRLevel.B2).
+    
+    Levels:
+        A1: Beginner
+        A2: Elementary
+        B1: Intermediate
+        B2: Upper Intermediate
+        C1: Advanced
+        C2: Proficient
+    """
+    A1 = "A1"
+    A2 = "A2"
+    B1 = "B1"
+    B2 = "B2"
+    C1 = "C1"
+    C2 = "C2"
+
+    @classmethod
+    @lru_cache(maxsize=1) 
+    def _get_ordered_members(cls) -> tuple[CEFRLevel, ...]:
+        """
+        Return all levels as tuple and cache it.
+        """
+        return tuple(cls)
+
+    @property
+    def is_beginner(self) -> bool:
+        """Check if this is a beginner level (A1-A2)."""
+        return self in (CEFRLevel.A1, CEFRLevel.A2)
+    
+    @property
+    def is_intermediate(self) -> bool:
+        """Check if this is an intermediate level (B1-B2)."""
+        return self in (CEFRLevel.B1, CEFRLevel.B2)
+    
+    @property
+    def is_advanced(self) -> bool:
+        """Check if this is an advanced level (C1-C2)."""
+        return self in (CEFRLevel.C1, CEFRLevel.C2)
+
+    @property
+    def description(self) -> str:
+        """Get a description of the level."""
+        descriptions = {
+            CEFRLevel.A1: "Beginner - Can understand basic phrases",
+            CEFRLevel.A2: "Elementary - Can communicate in simple tasks",
+            CEFRLevel.B1: "Intermediate - Can deal with most travel situations",
+            CEFRLevel.B2: "Upper Intermediate - Can interact with fluency",
+            CEFRLevel.C1: "Advanced - Can express fluently and spontaneously",
+            CEFRLevel.C2: "Proficient - Can understand everything",
+        }
+        return descriptions[self]
+
+    @property
+    def rank(self) -> int:
+        """
+        Get numeric value for comparison (1-6).
+        Useful for progress tracking and level comparisons.
+        """
+        return self._get_ordered_members().index(self) + 1
+
+    def is_adjacent_to(self, other: CEFRLevel) -> bool:
+        """Verify the other rank is adjacent to this one."""
+        return abs(self.rank - other.rank) == 1
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, CEFRLevel):
+            return NotImplemented
+        return self.rank < other.rank
+
 
 class PartOfSpeech(Enum):
     """
@@ -35,6 +145,7 @@ class PartOfSpeech(Enum):
     PHRASE = "PHRASE"       # Multi-word expressions
     IDIOM = "IDIOM"         # Idiomatic expressions
     UNKNOWN = "UNKNOWN"     # Fallback for unknown POS
+
 
 class GrammaticalNumber(str, Enum):
     """
