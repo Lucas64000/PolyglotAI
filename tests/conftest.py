@@ -17,6 +17,7 @@ from src.core.domain.entities import (
     Student, 
     Conversation,
     VocabularyItem,
+    VocabularySource
 )
 from src.core.domain.value_objects import (
     Role, 
@@ -57,6 +58,8 @@ class MakeConversation(Protocol):
         self,
         id: UUID | None = None,
         student_id: UUID | None = None,
+        native_lang: Language | None = None,
+        target_lang: Language | None = None,
         messages: list[ChatMessage] | None = None,
         status: Status = Status.ACTIVE,
         title: str | None = None,
@@ -72,6 +75,7 @@ class MakeVocab(Protocol):
         language: Language = Language("en"),
         pos: PartOfSpeech = PartOfSpeech.NOUN,
         definition: str = "Test definition",
+        source: VocabularySource = VocabularySource.STUDENT,
         review_count: int = 1,
         now: datetime | None = None,
     ) -> VocabularyItem: ...
@@ -118,6 +122,8 @@ def make_conversation(make_student: MakeStudent) -> MakeConversation:
     def _factory(
         id: UUID | None = None,
         student_id: UUID | None = None,
+        native_lang: Language | None = None,
+        target_lang: Language | None = None,
         messages: list[ChatMessage] | None = None,
         status: Status = Status.ACTIVE,
         title: str | None = None,
@@ -128,6 +134,8 @@ def make_conversation(make_student: MakeStudent) -> MakeConversation:
             _id=id or uuid4(),
             _created_at=ts,
             _student_id=student_id or make_student().id,
+            _native_lang=native_lang or Language("fr"),
+            _target_lang=target_lang or Language("en"),
             _last_activity_at=ts,
             _status=status,
             _title=title or "Conversation",
@@ -144,6 +152,7 @@ def make_vocab(make_student: MakeStudent) -> MakeVocab:
         language: Language = Language("en"),
         pos: PartOfSpeech = PartOfSpeech.NOUN,
         definition: str = "Test definition",
+        source: VocabularySource = VocabularySource.STUDENT,
         review_count: int = 1,
         now: datetime | None = None,
     ) -> VocabularyItem:
@@ -156,6 +165,7 @@ def make_vocab(make_student: MakeStudent) -> MakeVocab:
             _created_at=ts,
             _student_id=student_id or make_student().id,
             _lexeme=lexeme,
+            _source=source,
             _last_reviewed_at=ts,
             _review_count=review_count
         )

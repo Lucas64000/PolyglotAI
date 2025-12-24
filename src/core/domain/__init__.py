@@ -17,6 +17,7 @@ from .entities import (
     Entity,
     Student,
     VocabularyItem,
+    VocabularySource,
 )
 from .value_objects import (
     Role, 
@@ -33,7 +34,6 @@ from .value_objects import (
     CEFRLevel,
     Language,
     Status,
-    VocabularySource,
     GenerationStyle,
     CreativityLevel,
     TeacherProfile,

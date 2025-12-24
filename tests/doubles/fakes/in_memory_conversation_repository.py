@@ -14,7 +14,7 @@ from src.core.ports import ConversationRepository
 from src.core.exceptions import ResourceNotFoundError
 
 from src.application.ports import ConversationReader
-from src.application.queries.read_models.conversation_summary import ConversationSummary
+from src.application.queries.conversations import ConversationSummary
 
 
 class InMemoryConversationRepository(ConversationRepository, ConversationReader):
@@ -69,9 +69,11 @@ class InMemoryConversationRepository(ConversationRepository, ConversationReader)
     def _to_summary(self, conversation: Conversation) -> ConversationSummary:
         """Map entity to read model."""
         return ConversationSummary(
-            id=conversation.id,
+            conversation_id=conversation.id,
             title=conversation.title or "Conversation",
             created_at=conversation.created_at,
             last_activity_at=conversation.last_activity_at,
             status=conversation.status
         )
+
+

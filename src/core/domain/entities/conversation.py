@@ -12,12 +12,13 @@ from datetime import datetime
 from uuid import UUID
 
 from src.core.domain.entities.base import Entity, AggregateRoot
-from src.core.domain.value_objects import Status, Role
+from src.core.domain.value_objects import Status, Role, Language
 from src.core.exceptions import (
     ConversationNotWritableError, 
     EmptyConversationTitleError, 
     ConversationTitleTooLongError,
     InvalidChatMessageContentError,
+    InvalidLanguagePairError,
 )
 
 
@@ -127,9 +128,12 @@ class Conversation(AggregateRoot):
     
     A conversation groups related messages and tracks their lifecycle.
     Conversations can be ACTIVE (editable), ARCHIVED (read-only), or DELETED.
+    The conversation maintains the language pair context for generating appropriate responses.
 
     Attributes:
         _student_id: Identifier of the conversation owner (student)
+        _native_lang: The student's native language
+        _target_lang: The language the student is learning
         _title: Title of the conversation
         _status: Current conversation status (ACTIVE, ARCHIVED, DELETED)
         _messages: History of the conversation
@@ -138,6 +142,8 @@ class Conversation(AggregateRoot):
 
     _student_id: UUID
     _last_activity_at: datetime
+    _native_lang: Language
+    _target_lang: Language
     _title: str = field(default_factory=lambda: "Conversation")
     _status: Status = field(default_factory=lambda: Status.ACTIVE)
     _messages: list[ChatMessage] = field(default_factory=list) # type: ignore
@@ -158,6 +164,14 @@ class Conversation(AggregateRoot):
         return self._last_activity_at
     
     @property
+    def native_lang(self) -> Language:
+        return self._native_lang
+    
+    @property
+    def target_lang(self) -> Language:
+        return self._target_lang
+
+    @property
     def status(self) -> Status:
         """Return the conversation status."""
         return self._status
@@ -174,8 +188,11 @@ class Conversation(AggregateRoot):
 
     @classmethod
     def create_new(
-        cls, id: UUID, 
+        cls, 
+        id: UUID, 
         student_id: UUID, 
+        native_lang: Language,
+        target_lang: Language,
         now: datetime, 
         title: str = "Conversation"
     ) -> Conversation:
@@ -185,6 +202,8 @@ class Conversation(AggregateRoot):
         Args:
             id: Unique identifier for the conversation
             student_id: Identifier of the conversation owner
+            native_lang: The student's native language
+            target_lang: The language being learned
             now: Current timestamp for creation
             title: Title of the conversation (defaults to "Conversation")
         
@@ -192,9 +211,13 @@ class Conversation(AggregateRoot):
             Conversation: a new conversation with empty messages and ACTIVE status
             
         Raises:
+            InvalidLanguagePairError: if native_lang and target_lang are identical
             EmptyConversationTitleError: if title is empty
             ConversationTitleTooLongError: if title is too long
         """
+        if native_lang == target_lang:
+            raise InvalidLanguagePairError(native=native_lang.code, target=target_lang.code)
+
         cleaned_title = title.strip()
         if not cleaned_title:
             raise EmptyConversationTitleError(id)
@@ -206,12 +229,20 @@ class Conversation(AggregateRoot):
         return cls(
             _id=id,
             _student_id=student_id, 
+            _native_lang=native_lang,
+            _target_lang=target_lang,
             _created_at=now,
             _last_activity_at=now,
             _title=cleaned_title,
         )
     
-    def add_message(self, new_message_id: UUID, now: datetime, role: Role, content: str) -> ChatMessage:
+    def add_message(
+            self, 
+            new_message_id: UUID, 
+            now: datetime, 
+            role: Role, 
+            content: str
+        ) -> ChatMessage:
         """
         Create a message within this conversation context.
 

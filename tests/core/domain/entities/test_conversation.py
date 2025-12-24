@@ -13,8 +13,14 @@ from uuid import uuid4
 import pytest
 
 from src.core.domain.entities import ChatMessage, Conversation
-from src.core.domain.value_objects import Status, Role
-from src.core.exceptions import ConversationNotWritableError, EmptyConversationTitleError, ConversationTitleTooLongError
+from src.core.domain.value_objects import Status, Role, Language
+from src.core.exceptions import (
+    ConversationNotWritableError, 
+    EmptyConversationTitleError, 
+    ConversationTitleTooLongError,
+    InvalidLanguagePairError,
+)
+
 from tests.conftest import MakeConversation
 
 
@@ -64,10 +70,29 @@ class TestConversationCreation:
 
         assert conversation.title == "Custom Title"
 
+    def test_create_conversation_with_same_native_and_target_raises_error(self, make_conversation: MakeConversation) -> None:
+        """Creating a conversation with identical native and target languages raises InvalidLanguagePairError."""
+        id = uuid4()
+        student_id = uuid4()
+        native_lang = Language("fr")
+        target_lang = Language("fr")
+        now = datetime.now(timezone.utc)
+
+        with pytest.raises(InvalidLanguagePairError):
+            Conversation.create_new(
+                id=id,
+                student_id=student_id,
+                native_lang=native_lang,
+                target_lang=target_lang,
+                now=now,
+            )
+
     def test_create_conversation_with_empty_title_raises_error(self) -> None:
         """Creating a conversation with empty title raises EmptyConversationTitleError."""
         id = uuid4()
         student_id = uuid4()
+        native_lang = Language("fr")
+        target_lang = Language("en")
         now = datetime.now(timezone.utc)
         title = ""
 
@@ -75,6 +100,8 @@ class TestConversationCreation:
             Conversation.create_new(
                 id=id,
                 student_id=student_id,
+                native_lang=native_lang,
+                target_lang=target_lang,
                 now=now,
                 title=title
             )
@@ -85,6 +112,8 @@ class TestConversationCreation:
         """Creating a conversation with title longer than 100 chars raises ConversationTitleTooLongError."""
         id = uuid4()
         student_id = uuid4()
+        native_lang = Language("fr")
+        target_lang = Language("en")
         now = datetime.now(timezone.utc)
         long_title = "A" * 101
 
@@ -92,6 +121,8 @@ class TestConversationCreation:
             Conversation.create_new(
                 id=id,
                 student_id=student_id,
+                native_lang=native_lang,
+                target_lang=target_lang,
                 now=now,
                 title=long_title
             )
