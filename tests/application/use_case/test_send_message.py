@@ -22,8 +22,9 @@ from src.core.domain import (
     GenerationStyle,
 )
 from src.core.exceptions import ResourceNotFoundError, TeacherResponseError
-from src.application.commands.dtos.send_message import SendMessageRequest
-from src.application.commands.use_cases.send_message import SendMessageUseCase
+
+from src.application.dtos.conversations import SendMessageCommand
+from src.application.commands.conversations import SendMessageUseCase
 
 from tests.doubles.fakes import InMemoryConversationRepository
 from tests.doubles.stubs import StubTimeProvider
@@ -38,7 +39,7 @@ class TestSendMessageUseCase:
         self, 
         mock_chat: AsyncMock, 
         stub_time: StubTimeProvider,
-        make_send_message_request: Callable[..., SendMessageRequest],
+        make_send_message_command: Callable[..., SendMessageCommand],
         make_conversation: Callable[..., Conversation],
         make_chat_message: Callable[..., ChatMessage] 
     ) -> None:
@@ -67,10 +68,12 @@ class TestSendMessageUseCase:
         expected_teacher_response = "The word 'chat' translates to 'cat' in English."
         mock_chat.get_teacher_response.return_value = expected_teacher_response
 
-        # Build request DTO
-        request = make_send_message_request(
+        # Build command DTO
+        command = make_send_message_command(
             conversation_id=conv_id, 
             student_message=student_message,
+            native_lang=existing_conversation.native_lang,
+            target_lang=existing_conversation.target_lang,
             creativity_level=CreativityLevel.MODERATE,
             generation_style=GenerationStyle.CONVERSATIONAL,
         )
@@ -82,11 +85,11 @@ class TestSendMessageUseCase:
             time_provider=stub_time,      
         )
 
-        # Execute use case with the request DTO
-        response = await use_case.execute(request)
+        # Execute use case with the command DTO
+        result = await use_case.execute(command)
 
-        # 1. Response DTO correctness
-        assert response.teacher_message == expected_teacher_response
+        # 1. Result DTO correctness
+        assert result.teacher_message == expected_teacher_response
 
         # 2. Persistence: verify state in FAKE repository
         saved_conversation = await fake_repo.get_by_id(conv_id)
@@ -107,12 +110,17 @@ class TestSendMessageUseCase:
         # 3. Interaction: verify MOCK was called correctly
         expected_history = tuple(saved_conversation.messages[:-1])  # Excludes teacher response
         expected_teacher_profile = TeacherProfile(
-            creativity_level=request.creativity_level,
-            generation_style=request.generation_style
+            creativity_level=command.creativity_level,
+            generation_style=command.generation_style
         )
+        expected_native_lang = command.native_lang
+        expected_target_lang = command.target_lang
+
         mock_chat.get_teacher_response.assert_awaited_once_with(
             history=expected_history,
-            teacher_profile=expected_teacher_profile
+            teacher_profile=expected_teacher_profile,
+            native_lang=expected_native_lang,
+            target_lang=expected_target_lang,
         )
 
 
@@ -128,7 +136,7 @@ class TestSendMessageErrors:
         self,
         mock_chat: AsyncMock,
         stub_time: StubTimeProvider,
-        make_send_message_request: Callable[..., SendMessageRequest],
+        make_send_message_command: Callable[..., SendMessageCommand],
         make_conversation: Callable[..., Conversation],
     ) -> None:
         """
@@ -147,7 +155,7 @@ class TestSendMessageErrors:
         error_message = "Service connection timeout"
         mock_chat.get_teacher_response.side_effect = TeacherResponseError(cause=error_message)
 
-        request = make_send_message_request(conversation_id=conv_id)
+        command = make_send_message_command(conversation_id=conv_id)
         use_case = SendMessageUseCase(
             chat_provider=mock_chat,
             conv_repo=fake_repo,
@@ -156,7 +164,7 @@ class TestSendMessageErrors:
 
         # Execute use case, should raise TeacherResponseError
         with pytest.raises(TeacherResponseError) as exc_info:
-            await use_case.execute(request)
+            await use_case.execute(command)
         
         assert error_message in str(exc_info.value)
 
@@ -164,7 +172,7 @@ class TestSendMessageErrors:
         self,
         mock_chat: AsyncMock,
         stub_time: StubTimeProvider,
-        make_send_message_request: Callable[..., SendMessageRequest],
+        make_send_message_command: Callable[..., SendMessageCommand],
     ) -> None:
         """
         Given a non-existent conversation ID when sending a message
@@ -174,7 +182,7 @@ class TestSendMessageErrors:
         fake_repo = InMemoryConversationRepository()  
         non_existent_id = uuid4()
 
-        request = make_send_message_request(conversation_id=non_existent_id)
+        command = make_send_message_command(conversation_id=non_existent_id)
         use_case = SendMessageUseCase(
             chat_provider=mock_chat,
             conv_repo=fake_repo,
@@ -183,4 +191,4 @@ class TestSendMessageErrors:
 
         # Execute use case, should raise ResourceNotFoundError
         with pytest.raises(ResourceNotFoundError):
-            await use_case.execute(request)
+            await use_case.execute(command)

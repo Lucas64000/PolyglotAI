@@ -9,6 +9,7 @@ from .conversations import (
     SendMessageCommand,
     SendMessageResult,
     ConversationSummary,
+    ListConversationsQuery,
 )
 from .students import StudentSummary
 
@@ -17,6 +18,7 @@ __all__ = [
     "SendMessageCommand",
     "SendMessageResult",
     "ConversationSummary",
+    "ListConversationsQuery",
     # Student DTOs
     "StudentSummary",
 ]
