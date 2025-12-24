@@ -29,12 +29,9 @@ The project strictly follows the **Ports & Adapters** (Hexagonal Architecture) p
 │   │   └── exceptions          # Domain errors & invariant violations
 │   │
 │   ├── application             # Application Layer (Use Cases & Orchestration)
-│   │   ├── commands            # Write operations (CQRS)
-│   │   │   ├── use_cases       
-│   │   │   └── dtos            
-│   │   ├── queries             # Read operations (CQRS)
-│   │   │   ├── use_cases
-│   │   │   └── read_models     
+│   │   ├── commands            # Write operations (CQRS)         
+│   │   ├── queries             # Read operations (CQRS)   
+│   │   ├── dtos                # Commands (input) & Read Models (output) - Anti-corruption layer      
 │   │   └── ports               # Application-specific driven interfaces (mainly readers)
 │   │       
 │   │
@@ -44,6 +41,16 @@ The project strictly follows the **Ports & Adapters** (Hexagonal Architecture) p
 │       │   └── driving         # Concrete implementation of Driving Interfaces    
 │       ├── exceptions          # Infrastructure exceptions (API, HTTP, DB Erros etc.)      
 │       └── container.py        # Dependency Injection configuration
+│
+└── tests                       # Unit tests (mirrors src/ structure)
+    ├── conftest.py             # Shared pytest fixtures
+    ├── core                    # Domain tests
+    │   └── domain
+    ├── application             # Use case tests
+    ├── infrastructure          # Infrastructure tests
+    └── doubles                 # Test doubles (fakes, stubs, mocks)
+        ├── fakes               # Fake implementations (in-memory repositories, etc.)
+        └── stubs               # Stub implementations (time providers, etc.)
 ```
 
 ## Design Principles
