@@ -28,6 +28,7 @@ from .infrastructure import (
     ExternalServiceError,
     ChatProviderError,
     TeacherResponseError,
+    PersistenceError,
 )
 
 __all__ = [
@@ -51,4 +52,5 @@ __all__ = [
     "ExternalServiceError",
     "ChatProviderError",
     "TeacherResponseError",
+    "PersistenceError",
 ]

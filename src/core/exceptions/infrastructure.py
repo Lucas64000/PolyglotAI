@@ -22,3 +22,8 @@ class TeacherResponseError(ChatProviderError):
     """
     def __init__(self, cause: str) -> None:
         super().__init__(f"Unable to provide the teacher's response: {cause}")
+
+
+class PersistenceError(InfrastructureError):
+    """Raised when data cannot be persisted to the storage mechanism."""
+    pass
