@@ -1,6 +1,12 @@
 """
-Commands Package
+Command Use Cases Package
 
-Write operations that modify system state.
-Organized following CQRS and Use Case Pattern.
+Application services that orchestrate business operations.
+Each use case represents a single user action or system operation.
 """
+
+from .conversations import SendMessageUseCase
+
+__all__ = [
+    "SendMessageUseCase",
+]

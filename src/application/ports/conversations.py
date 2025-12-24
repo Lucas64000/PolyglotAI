@@ -1,7 +1,7 @@
 from typing import Protocol, Sequence
 from uuid import UUID
 
-from src.application.queries.read_models.conversation_summary import ConversationSummary
+from src.application.dtos.conversations import ConversationSummary
 
 class ConversationReader(Protocol):
     """

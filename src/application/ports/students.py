@@ -1,7 +1,10 @@
+"""
+Used by the Admin to edit / get stats about users.
+"""
 from typing import Protocol, Sequence
 
 from src.core.domain import Language, CEFRLevel
-from src.application.queries.read_models.student_summary import StudentSummary
+from src.application.dtos.students import StudentSummary
 
 
 class StudentReader(Protocol):

@@ -10,7 +10,7 @@ from uuid import uuid4
 from src.core.ports import ChatProvider, ConversationRepository, TimeProvider
 from src.core.domain import Role, TeacherProfile, CreativityLevel, GenerationStyle
 
-from src.application.commands.dtos.send_message import SendMessageRequest, SendMessageResponse
+from src.application.dtos.conversations import SendMessageCommand, SendMessageResult
 
 
 class SendMessageUseCase:
@@ -44,7 +44,7 @@ class SendMessageUseCase:
         self.conv_repo = conv_repo
         self.time_provider = time_provider
 
-    async def execute(self, request_dto: SendMessageRequest) -> SendMessageResponse:
+    async def execute(self, request_dto: SendMessageCommand) -> SendMessageResult:
         """
         Execute the send message use case.
         
@@ -111,7 +111,7 @@ class SendMessageUseCase:
         await self.conv_repo.save(conversation)
 
         # Return the response with message IDs and teacher message
-        return SendMessageResponse(
+        return SendMessageResult(
             message_id=teacher_message_id,
             student_message_id=student_message_id,
             teacher_message=teacher_response
