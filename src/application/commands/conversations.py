@@ -16,12 +16,15 @@ from src.core.domain import (
     # Entities
     Conversation,
 )
+from src.core.exceptions import ResourceNotFoundError
 
 from src.application.dtos.conversations import (
     # CreateConversationUseCase
     CreateConversationCommand, CreateConversationResult,
     # SendMessageUsecase
-    SendMessageCommand, SendMessageResult
+    SendMessageCommand, SendMessageResult,
+    # DeleteConversationUseCase
+    DeleteConversationCommand,
 )
 
 class CreateConversationUseCase:
@@ -35,17 +38,17 @@ class CreateConversationUseCase:
 
     def __init__(
         self,
-        conv_repo: ConversationRepository,
+        repository: ConversationRepository,
         time_provider: TimeProvider,
     ) -> None:
         """
         Initialize the use case with required dependencies.
         
         Args:
-            conv_repo: Repository for conversation persistence
+            repository: Repository for conversation persistence
             time_provider: Port for retrieving current time
         """
-        self.conv_repo = conv_repo
+        self.repository = repository
         self.time_provider = time_provider
 
     async def execute(self, command_dto: CreateConversationCommand) -> CreateConversationResult:
@@ -82,7 +85,7 @@ class CreateConversationUseCase:
         )
 
         # 2. Persist conversation
-        await self.conv_repo.save(conversation=conversation)
+        await self.repository.save(conversation=conversation)
 
         # Return the result with conversation ID
         return CreateConversationResult(
@@ -105,7 +108,7 @@ class SendMessageUseCase:
     def __init__(
         self,
         chat_provider: ChatProvider,
-        conv_repo: ConversationRepository,
+        repository: ConversationRepository,
         time_provider: TimeProvider,
     ) -> None:
         """
@@ -113,11 +116,11 @@ class SendMessageUseCase:
         
         Args:
             chat_provider: Port for getting teacher's responses
-            conv_repo: Repository for conversation persistence
+            repository: Repository for conversation persistence
             time_provider: Port for retrieving current time
         """
         self.chat_provider = chat_provider
-        self.conv_repo = conv_repo
+        self.repository = repository
         self.time_provider = time_provider
 
     async def execute(self, command_dto: SendMessageCommand) -> SendMessageResult:
@@ -145,7 +148,7 @@ class SendMessageUseCase:
             TeacherGenerationError: If service fails to get teacher response
         """
         # Retrieve the conversation by ID
-        conversation = await self.conv_repo.get_by_id(command_dto.conversation_id)
+        conversation = await self.repository.get_by_id(command_dto.conversation_id)
         
         # Generate IDs and timestamps for the student message
         student_message_id = uuid4()
@@ -187,7 +190,7 @@ class SendMessageUseCase:
         )
 
         # Save the updated conversation
-        await self.conv_repo.save(conversation)
+        await self.repository.save(conversation)
 
         # Return the result with message IDs and teacher message
         return SendMessageResult(
@@ -195,3 +198,59 @@ class SendMessageUseCase:
             student_message_id=student_message_id,
             teacher_message=teacher_response
         )
+    
+
+class DeleteConversationUseCase:
+    """
+    Application use case for deleting a conversation.
+    
+    This use case coordinates:
+    1. Verifying conversation ownership (security check)
+    2. Removing the conversation from persistence
+    
+    Security note: Returns ResourceNotFoundError for both non-existent 
+    conversations and conversations owned by other users to prevent enumeration.
+    """
+
+    def __init__(
+            self, 
+            repository: ConversationRepository,
+            time_provider: TimeProvider,
+        ) -> None:
+        """
+        Initialize the use case with required dependencies.
+        
+        Args:
+            repository: Repository for conversation persistence
+            time_provider: Port for retrieving current time
+        """
+        self.repository = repository
+        self.time_provider = time_provider
+
+    async def execute(self, command: DeleteConversationCommand) -> None:
+        """
+        Execute the delete conversation use case.
+        
+        Workflow:
+        1. Fetch the conversation to verify it exists
+        2. Verify ownership (security check)
+        3. Remove the conversation
+        
+        Args:
+            command: Command containing conversation ID and student ID
+            
+        Raises:
+            ResourceNotFoundError: If conversation doesn't exist OR if the requester is not the owner
+        """
+        # 1. Fetch the conversation to check ownership
+        conversation = await self.repository.get_by_id(command.conversation_id)
+
+        # 2. Security Check: Is the requester the owner?
+        if conversation.student_id != command.student_id:
+            raise ResourceNotFoundError(resource_type="Conversation", resource_id=command.conversation_id)
+        
+        print(self.time_provider.now())
+        conversation.delete(now=self.time_provider.now())
+
+        # 3. Remove the conversation (soft delete)
+        await self.repository.save(conversation=conversation)

@@ -72,8 +72,6 @@ class TestSendMessageUseCase:
         command = make_send_message_command(
             conversation_id=conv_id, 
             student_message=student_message,
-            native_lang=existing_conversation.native_lang,
-            target_lang=existing_conversation.target_lang,
             creativity_level=CreativityLevel.MODERATE,
             generation_style=GenerationStyle.CONVERSATIONAL,
         )
@@ -81,7 +79,7 @@ class TestSendMessageUseCase:
         # Build use case with all dependencies injected
         use_case = SendMessageUseCase(
             chat_provider=mock_chat,     
-            conv_repo=fake_repo,          
+            repository=fake_repo,          
             time_provider=stub_time,      
         )
 
@@ -110,11 +108,11 @@ class TestSendMessageUseCase:
         # 3. Interaction: verify MOCK was called correctly
         expected_history = tuple(saved_conversation.messages[:-1])  # Excludes teacher response
         expected_teacher_profile = TeacherProfile(
-            creativity_level=command.creativity_level,
-            generation_style=command.generation_style
+            creativity_level=CreativityLevel(command.creativity_level),
+            generation_style=GenerationStyle(command.generation_style)
         )
-        expected_native_lang = command.native_lang
-        expected_target_lang = command.target_lang
+        expected_native_lang = existing_conversation.native_lang
+        expected_target_lang = existing_conversation.target_lang
 
         mock_chat.get_teacher_response.assert_awaited_once_with(
             history=expected_history,
@@ -158,7 +156,7 @@ class TestSendMessageErrors:
         command = make_send_message_command(conversation_id=conv_id)
         use_case = SendMessageUseCase(
             chat_provider=mock_chat,
-            conv_repo=fake_repo,
+            repository=fake_repo,
             time_provider=stub_time,
         )
 
@@ -185,7 +183,7 @@ class TestSendMessageErrors:
         command = make_send_message_command(conversation_id=non_existent_id)
         use_case = SendMessageUseCase(
             chat_provider=mock_chat,
-            conv_repo=fake_repo,
+            repository=fake_repo,
             time_provider=stub_time,
         )
 

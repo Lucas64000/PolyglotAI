@@ -32,7 +32,7 @@ class TestCreateConversation:
         )
 
         use_case = CreateConversationUseCase(
-            conv_repo=fake_repo,
+            repository=fake_repo,
             time_provider=stub_time
         )
         
@@ -65,7 +65,7 @@ class TestCreateConversation:
         )
 
         use_case = CreateConversationUseCase(
-            conv_repo=fake_repo,
+            repository=fake_repo,
             time_provider=stub_time
         )
         
