@@ -9,7 +9,7 @@ import copy
 from typing import Sequence
 from uuid import UUID
 
-from src.core.domain import Conversation
+from src.core.domain import Conversation, Status
 from src.core.ports import ConversationRepository
 from src.core.exceptions import ResourceNotFoundError
 
@@ -55,25 +55,57 @@ class InMemoryConversationRepository(ConversationRepository, ConversationReader)
         self, 
         student_id: UUID, 
         limit: int = 20, 
-        offset: int = 0
+        offset: int = 0,
+        include_archived: bool = False
     ) -> Sequence[ConversationSummary]:
-        """Get paginated conversation summaries for a student."""
+        """
+        Get paginated conversation summaries for a student.
+        
+        By default, returns only ACTIVE conversations. DELETED conversations
+        are never returned (soft delete means invisible to users).
+        
+        Args:
+            student_id: ID of the student whose conversations to retrieve
+            limit: Maximum number of results to return (default: 20)
+            offset: Number of items to skip for pagination (default: 0)
+            include_archived: If True, includes ARCHIVED conversations (default: False)
+            
+        Returns:
+            List of conversation summaries, sorted by creation date (newest first)
+        """
+        # Determine which statuses to include
+        allowed_statuses = {Status.ACTIVE}
+        if include_archived:
+            allowed_statuses.add(Status.ARCHIVED)
+        # Note: DELETED conversations are never included (soft delete)
+        
         student_conversations = [
             conv for conv in self._storage.values() 
-            if conv.student_id == student_id
+            if conv.student_id == student_id and conv.status in allowed_statuses
         ]
         student_conversations.sort(key=lambda c: c.created_at, reverse=True)
         paginated_convs = student_conversations[offset : offset + limit]
         return [self._to_summary(c) for c in paginated_convs]
 
     def _to_summary(self, conversation: Conversation) -> ConversationSummary:
-        """Map entity to read model."""
+        """
+        Map a Conversation entity to a ConversationSummary read model.
+        
+        Extracts only the essential fields needed for list views,
+        avoiding loading full message history.
+        
+        Args:
+            conversation: The conversation entity to convert
+            
+        Returns:
+            A lightweight summary DTO for display in lists
+        """
         return ConversationSummary(
             conversation_id=conversation.id,
             title=conversation.title or "Conversation",
             created_at=conversation.created_at,
             last_activity_at=conversation.last_activity_at,
-            status=conversation.status
+            status=conversation.status.value
         )
 
 
