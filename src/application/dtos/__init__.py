@@ -10,6 +10,10 @@ from .conversations import (
     SendMessageResult,
     ConversationSummary,
     ListConversationsQuery,
+    SelectConversationQuery,
+    SelectConversationResult,
+    MessageView,
+    DeleteConversationCommand,
 )
 from .students import StudentSummary
 
@@ -19,6 +23,10 @@ __all__ = [
     "SendMessageResult",
     "ConversationSummary",
     "ListConversationsQuery",
+    "SelectConversationQuery",
+    "SelectConversationResult",
+    "MessageView",
+    "DeleteConversationCommand",
     # Student DTOs
     "StudentSummary",
 ]

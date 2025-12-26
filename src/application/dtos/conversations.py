@@ -11,7 +11,6 @@ from uuid import UUID
 from src.core.domain.value_objects import (
     CreativityLevel, 
     GenerationStyle, 
-    Status,
     Language,
 )
 
@@ -50,13 +49,13 @@ class ConversationSummary:
         title: Conversation title
         created_at: When the conversation was created
         last_activity_at: When the conversation was last modified
-        status: Current conversation status (ACTIVE, ARCHIVED, DELETED)
+        status: Current conversation status
     """
     conversation_id: UUID
     title: str
     created_at: datetime
     last_activity_at: datetime
-    status: Status
+    status: str
 
 # ──────────────────────────────────────────────────────────────────────────
 # Create Conversation Use Case (Command)
@@ -93,6 +92,66 @@ class CreateConversationResult:
     conversation_id: UUID
 
 # ──────────────────────────────────────────────────────────────────────────
+# Select Conversation Use Case (Query)
+# ──────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True, slots=True)
+class SelectConversationQuery:
+    """
+    Query for retrieving a selected conversation.
+
+    Encapsulates the query parameters required to fetch the conversation 
+    for a specific student. It serves as the input contract for the SelectConversation use case.
+
+    Attributes:
+        student_id: The unique identifier of the student.
+        conversation_id: The unique identifier of the requested conversation.
+    """
+    student_id: UUID
+    conversation_id: UUID
+
+@dataclass(frozen=True)
+class MessageView:
+    """
+    Read model for displaying messages in a conversation.
+    
+    Represents a single message with its metadata, optimized for view/display purposes.
+    
+    Attributes:
+        id: Unique message identifier
+        role: Message sender role ("student" or "teacher")
+        content: The text content of the message
+        created_at: Timestamp when the message was created
+    """
+    id: UUID
+    role: str       
+    content: str
+    created_at: datetime
+
+@dataclass(frozen=True, slots=True)
+class SelectConversationResult:
+    """
+    Result after retrieving a conversation.
+    
+    Contains the complete conversation information including metadata and all associated messages.
+    Used as the response model for the SelectConversation use case.
+    
+    Attributes:
+        conversation_id: Unique conversation identifier
+        title: The conversation title
+        native_lang: Student's native language (ISO 639-1 code)
+        target_lang: Language being learned (ISO 639-1 code)
+        status: Current conversation status (e.g., "ACTIVE", "ARCHIVED")
+        messages: List of all messages in the conversation
+    """
+    conversation_id: UUID
+    title: str
+    native_lang: str 
+    target_lang: str
+    status: str      
+    messages: list[MessageView]
+
+# ──────────────────────────────────────────────────────────────────────────
 # Send Message Use Case (Command)
 # ──────────────────────────────────────────────────────────────────────────
 
@@ -106,15 +165,11 @@ class SendMessageCommand:
     Attributes:
         conversation_id: ID of the conversation to add messages to
         student_message: The text content of the student's message
-        native_lang: The student's native language
-        target_lang: The language the student is learning
-        creativity_level: AI creativity level (0-3, default: 2 for moderate)
-        generation_style: Pedagogical style (default: "conversational")
+        creativity_level: Teacher creativity level default: MODERATE)
+        generation_style: Pedagogical style (default: CONVERSATIONAL)
     """
     conversation_id: UUID
     student_message: str
-    native_lang: Language
-    target_lang: Language
     creativity_level: CreativityLevel = CreativityLevel.MODERATE
     generation_style: GenerationStyle = GenerationStyle.CONVERSATIONAL
 
@@ -134,3 +189,13 @@ class SendMessageResult:
     message_id: UUID
     student_message_id: UUID
     teacher_message: str
+
+# ──────────────────────────────────────────────────────────────────────────
+# Delete Conversation Use Case (Command)
+# ──────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True, slots=True)
+class DeleteConversationCommand:
+
+    conversation_id: UUID
+    student_id: UUID

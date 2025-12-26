@@ -8,8 +8,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from src.core.domain.value_objects import Language, CEFRLevel
-
 # ──────────────────────────────────────────────────────────────────────────
 # READ MODELS (Query Operations)
 # ──────────────────────────────────────────────────────────────────────────
@@ -30,7 +28,7 @@ class StudentSummary:
         created_at: When the student account was created
     """
     id: UUID
-    native_lang: Language
-    target_lang: Language
-    level: CEFRLevel
+    native_lang: str
+    target_lang: str
+    level: str
     created_at: datetime
