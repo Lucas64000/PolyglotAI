@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 from typing import Generator
 
-from src.main import app
+from src.infrastructure.adapters.driving.fastapi.main import app
 from src.infrastructure.adapters.driven import InMemoryConversationRepository
 from src.infrastructure.adapters.driving.fastapi.dependencies import (
     get_in_memory_db, 

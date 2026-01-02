@@ -12,7 +12,7 @@ from src.infrastructure.adapters.driving.fastapi.dependencies import (
     get_conversation_repository
 )
 
-from src.main import app
+from src.infrastructure.adapters.driving.fastapi.main import app
 
 
 def test_health_check_returns_200(client: TestClient):
