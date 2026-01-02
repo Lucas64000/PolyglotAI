@@ -11,6 +11,7 @@ from .base import (
     InfrastructureError,
 )
 from .business import (
+    BusinessRuleViolation,
     InvalidConversationStateError,
     ConversationNotWritableError,
     EmptyConversationTitleError,
@@ -37,6 +38,7 @@ __all__ = [
     "DomainException",
     "InfrastructureError",
     # Business Rules
+    "BusinessRuleViolation",
     "InvalidConversationStateError",
     "ConversationNotWritableError",
     "EmptyConversationTitleError",
