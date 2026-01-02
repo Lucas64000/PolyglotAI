@@ -75,9 +75,9 @@ class CreateConversationCommand:
         target_lang: The language the student is learning in this conversation
     """
     student_id: UUID
-    title: str
     native_lang: Language
     target_lang: Language
+    title: str | None = None
 
 @dataclass(frozen=True, slots=True)
 class CreateConversationResult:
@@ -104,11 +104,11 @@ class SelectConversationQuery:
     for a specific student. It serves as the input contract for the SelectConversation use case.
 
     Attributes:
-        student_id: The unique identifier of the student.
         conversation_id: The unique identifier of the requested conversation.
+        student_id: The unique identifier of the student.
     """
-    student_id: UUID
     conversation_id: UUID
+    student_id: UUID
 
 @dataclass(frozen=True)
 class MessageView:

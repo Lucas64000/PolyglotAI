@@ -3,7 +3,6 @@ from typing import Protocol
 from uuid import UUID, uuid4
 
 import pytest
-from unittest.mock import AsyncMock
 from datetime import datetime, timezone
 
 from src.core.domain import (
@@ -11,7 +10,6 @@ from src.core.domain import (
     GenerationStyle, 
     Language,
 )
-from src.core.ports import ChatProvider
 
 from src.application.dtos.conversations import (
     # ListStudentConversationsUseCase
@@ -127,7 +125,6 @@ def make_create_conversation_command() -> MakeCreateConversationCommand:
             student_id=student_id or uuid4(),
             native_lang=native_lang,
             target_lang=target_lang,
-            title=title,
         )
     
     return _factory
@@ -226,19 +223,6 @@ def make_delete_conversation_command() -> MakeDeleteConversationCommand:
     return _factory
 
 # Mock
-
-@pytest.fixture
-def mock_chat() -> AsyncMock:
-    """
-    MOCK for ChatProvider.
-    
-    Use this to verify interactions (was it called? with what arguments?).
-    Configure return_value or side_effect per test as needed.
-    """
-    mock = AsyncMock(spec=ChatProvider)
-    mock.get_teacher_response.return_value = "Hello Student!"
-
-    return mock
 
 @pytest.fixture
 def fixed_time() -> datetime:

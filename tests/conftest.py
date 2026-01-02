@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 from datetime import datetime, timezone
 
 import pytest
+from unittest.mock import AsyncMock
 
 from src.core.domain.entities import (
     ChatMessage, 
@@ -28,6 +29,7 @@ from src.core.domain.value_objects import (
     Lemma,
     PartOfSpeech,
 )
+from src.core.ports import ChatProvider
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
@@ -170,3 +172,16 @@ def make_vocab(make_student: MakeStudent) -> MakeVocab:
             _review_count=review_count
         )
     return _factory
+
+@pytest.fixture
+def mock_chat() -> AsyncMock:
+    """
+    MOCK for ChatProvider.
+    
+    Use this to verify interactions (was it called? with what arguments?).
+    Configure return_value or side_effect per test as needed.
+    """
+    mock = AsyncMock(spec=ChatProvider)
+    mock.get_teacher_response.return_value = "Hello Student!"
+
+    return mock

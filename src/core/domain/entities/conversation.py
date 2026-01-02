@@ -191,10 +191,10 @@ class Conversation(AggregateRoot):
         cls, 
         id: UUID, 
         student_id: UUID, 
+        title: str,
         native_lang: Language,
         target_lang: Language,
         now: datetime, 
-        title: str = "Conversation"
     ) -> Conversation:
         """
         Factory method for creating a new, empty, and active conversation.
@@ -202,10 +202,10 @@ class Conversation(AggregateRoot):
         Args:
             id: Unique identifier for the conversation
             student_id: Identifier of the conversation owner
+            title: Title of the conversation
             native_lang: The student's native language
             target_lang: The language being learned
             now: Current timestamp for creation
-            title: Title of the conversation (defaults to "Conversation")
         
         Returns:
             Conversation: a new conversation with empty messages and ACTIVE status

@@ -14,6 +14,8 @@ from .conversations import (
     SelectConversationResult,
     MessageView,
     DeleteConversationCommand,
+    CreateConversationCommand,
+    CreateConversationResult,
 )
 from .students import StudentSummary
 
@@ -27,6 +29,8 @@ __all__ = [
     "SelectConversationResult",
     "MessageView",
     "DeleteConversationCommand",
+    "CreateConversationCommand",
+    "CreateConversationResult",
     # Student DTOs
     "StudentSummary",
 ]

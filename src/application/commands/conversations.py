@@ -48,8 +48,8 @@ class CreateConversationUseCase:
             repository: Repository for conversation persistence
             time_provider: Port for retrieving current time
         """
-        self.repository = repository
-        self.time_provider = time_provider
+        self._repository = repository
+        self._time_provider = time_provider
 
     async def execute(self, command_dto: CreateConversationCommand) -> CreateConversationResult:
         """
@@ -72,20 +72,22 @@ class CreateConversationUseCase:
         """
         # Generate ID and timestamps for the conversation
         conversation_id = uuid4()
-        now = self.time_provider.now()
+        now = self._time_provider.now()
 
+        conversation_title = command_dto.title if command_dto.title and command_dto.title.strip() else "New Conversation"
+        
         # 1. Create the Conversation entity
         conversation = Conversation.create_new(
             id=conversation_id,
             student_id=command_dto.student_id,
+            title=conversation_title,
             native_lang=command_dto.native_lang,
             target_lang=command_dto.target_lang,
-            title=command_dto.title,
             now=now,
         )
 
         # 2. Persist conversation
-        await self.repository.save(conversation=conversation)
+        await self._repository.save(conversation=conversation)
 
         # Return the result with conversation ID
         return CreateConversationResult(
@@ -119,9 +121,9 @@ class SendMessageUseCase:
             repository: Repository for conversation persistence
             time_provider: Port for retrieving current time
         """
-        self.chat_provider = chat_provider
-        self.repository = repository
-        self.time_provider = time_provider
+        self._chat_provider = chat_provider
+        self._repository = repository
+        self._time_provider = time_provider
 
     async def execute(self, command_dto: SendMessageCommand) -> SendMessageResult:
         """
@@ -147,14 +149,14 @@ class SendMessageUseCase:
             ConversationNotWritableError: If conversation is archived or deleted
             TeacherGenerationError: If service fails to get teacher response
         """
-        # Retrieve the conversation by ID
-        conversation = await self.repository.get_by_id(command_dto.conversation_id)
+        # 1. Retrieve the conversation by ID
+        conversation = await self._repository.get_by_id(command_dto.conversation_id)
         
         # Generate IDs and timestamps for the student message
         student_message_id = uuid4()
-        now_student = self.time_provider.now()
+        now_student = self._time_provider.now()
     
-        # Add the student's message to the conversation
+        # 2. Add the student's message to the conversation
         _ = conversation.add_message(
             new_message_id=student_message_id,
             now=now_student,
@@ -169,8 +171,8 @@ class SendMessageUseCase:
             generation_style=GenerationStyle(command_dto.generation_style)
         )
 
-        # Get the teacher's response
-        teacher_response = await self.chat_provider.get_teacher_response(
+        # 3. Get the teacher's response
+        teacher_response = await self._chat_provider.get_teacher_response(
             history=history, 
             teacher_profile=teacher_profile,
             native_lang=conversation.native_lang,
@@ -179,9 +181,9 @@ class SendMessageUseCase:
 
         # Generate IDs and timestamps for the teacher message
         teacher_message_id = uuid4()
-        now_teacher = self.time_provider.now()
+        now_teacher = self._time_provider.now()
         
-        # Add the teacher's message to the conversation
+        # 4. Add the teacher's message to the conversation
         _ = conversation.add_message(
             new_message_id=teacher_message_id,
             now=now_teacher,
@@ -189,10 +191,10 @@ class SendMessageUseCase:
             content=teacher_response
         )
 
-        # Save the updated conversation
-        await self.repository.save(conversation)
+        # 5. Save the updated conversation
+        await self._repository.save(conversation)
 
-        # Return the result with message IDs and teacher message
+        # 6. Return the result with message IDs and teacher message
         return SendMessageResult(
             message_id=teacher_message_id,
             student_message_id=student_message_id,
@@ -224,8 +226,8 @@ class DeleteConversationUseCase:
             repository: Repository for conversation persistence
             time_provider: Port for retrieving current time
         """
-        self.repository = repository
-        self.time_provider = time_provider
+        self._repository = repository
+        self._time_provider = time_provider
 
     async def execute(self, command: DeleteConversationCommand) -> None:
         """
@@ -243,14 +245,13 @@ class DeleteConversationUseCase:
             ResourceNotFoundError: If conversation doesn't exist OR if the requester is not the owner
         """
         # 1. Fetch the conversation to check ownership
-        conversation = await self.repository.get_by_id(command.conversation_id)
+        conversation = await self._repository.get_by_id(command.conversation_id)
 
         # 2. Security Check: Is the requester the owner?
         if conversation.student_id != command.student_id:
             raise ResourceNotFoundError(resource_type="Conversation", resource_id=command.conversation_id)
         
-        print(self.time_provider.now())
-        conversation.delete(now=self.time_provider.now())
+        conversation.delete(now=self._time_provider.now())
 
         # 3. Remove the conversation (soft delete)
-        await self.repository.save(conversation=conversation)
+        await self._repository.save(conversation=conversation)
